@@ -31,7 +31,7 @@ export const CoordinatorView: React.FC<{ onLogout: () => void }> = ({ onLogout }
       </div>
 
       <div className="p-5">
-        {activeTab === 'view' && (activeTab === 'view' && (
+        {activeTab === 'view' && (
           <div className="space-y-4">
             {buses.map(bus => (
               <Card key={bus.id} className="p-5 border-2 border-indigo-50">
@@ -46,7 +46,7 @@ export const CoordinatorView: React.FC<{ onLogout: () => void }> = ({ onLogout }
                    </div>
                    <div className="flex justify-between border-b pb-2 text-gray-900">
                       <span className="text-xs font-bold text-gray-400 uppercase">फ़ोन नंबर</span>
-                      <span className="font-mono text-xs">{bus.driverContact}</span>
+                      <span className="font-mono text-xs text-gray-900">{bus.driverContact}</span>
                    </div>
                    <div className="pt-2">
                       <span className="text-[10px] font-black text-gray-400 uppercase mb-2 block">स्टॉप सूची</span>
@@ -60,7 +60,7 @@ export const CoordinatorView: React.FC<{ onLogout: () => void }> = ({ onLogout }
               </Card>
             ))}
           </div>
-        ))}
+        )}
 
         {activeTab === 'add' && (
           <Card className="p-6">
