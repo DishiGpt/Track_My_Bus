@@ -25,6 +25,7 @@ export interface Bus {
   routeHindi: string;
   stops: Stop[];
   isGpsActive?: boolean;
+  isDisabled?: boolean;
 }
 
 export interface User {

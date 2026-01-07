@@ -1,12 +1,20 @@
 
 import React, { useState } from 'react';
-import { MOCK_BUSES } from '../mockData';
+// Import Bus type from types and use buses prop instead of the non-existent MOCK_BUSES export
+import { Bus } from '../types';
 import { Header, Card, Button } from './Shared';
 
-export const DriverView: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
+interface DriverViewProps {
+  onLogout: () => void;
+  buses: Bus[];
+}
+
+// Updated DriverView to accept buses as a prop to ensure it stays in sync with coordinator updates
+export const DriverView: React.FC<DriverViewProps> = ({ onLogout, buses }) => {
   const [selectedBusId, setSelectedBusId] = useState<string>('');
   const [isGpsEnabled, setIsGpsEnabled] = useState(false);
-  const bus = MOCK_BUSES.find(b => b.id === selectedBusId);
+  // Use the buses prop instead of MOCK_BUSES
+  const bus = buses.find(b => b.id === selectedBusId);
 
   return (
     <div className="min-h-screen bg-white">
@@ -24,7 +32,7 @@ export const DriverView: React.FC<{ onLogout: () => void }> = ({ onLogout }) => 
             }}
           >
             <option value="">नंबर चुनें</option>
-            {MOCK_BUSES.map(b => (
+            {buses.map(b => (
               <option key={b.id} value={b.id}>{b.busNumber}</option>
             ))}
           </select>
