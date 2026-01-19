@@ -1,0 +1,158 @@
+const Bus = require('../models/Bus.model');
+const User = require('../models/User.model');
+
+// Get all buses (for coordinators/drivers)
+exports.getAllBuses = async (req, res) => {
+  try {
+    const buses = await Bus.find()
+      .populate('driver', 'name phone')
+      .populate('route', 'name startingPoint')
+      .populate('coordinator', 'name phone');
+
+    res.json({
+      success: true,
+      data: buses,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching buses',
+      error: error.message,
+    });
+  }
+};
+
+// Get buses for today (for students)
+exports.getBusesForToday = async (req, res) => {
+  try {
+    const buses = await Bus.find({ isAvailableToday: true })
+      .populate('driver', 'name phone')
+      .populate('route', 'name startingPoint waypoints');
+
+    res.json({
+      success: true,
+      data: buses,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching buses',
+      error: error.message,
+    });
+  }
+};
+
+// Create bus
+exports.createBus = async (req, res) => {
+  try {
+    const { busNumber, driverId, routeId, departureTime, capacity } = req.body;
+
+    const bus = new Bus({
+      busNumber,
+      driver: driverId,
+      route: routeId,
+      departureTime,
+      capacity,
+      coordinator: req.userId,
+    });
+
+    await bus.save();
+    await bus.populate('driver', 'name phone');
+    await bus.populate('route', 'name startingPoint');
+
+    res.status(201).json({
+      success: true,
+      message: 'Bus created successfully',
+      data: bus,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error creating bus',
+      error: error.message,
+    });
+  }
+};
+
+// Update bus
+exports.updateBus = async (req, res) => {
+  try {
+    const { busNumber, driverId, routeId, departureTime, isAvailableToday } =
+      req.body;
+
+    const bus = await Bus.findByIdAndUpdate(
+      req.params.id,
+      {
+        busNumber,
+        driver: driverId,
+        route: routeId,
+        departureTime,
+        isAvailableToday,
+      },
+      { new: true }
+    )
+      .populate('driver', 'name phone')
+      .populate('route', 'name startingPoint');
+
+    res.json({
+      success: true,
+      message: 'Bus updated successfully',
+      data: bus,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error updating bus',
+      error: error.message,
+    });
+  }
+};
+
+// Delete bus
+exports.deleteBus = async (req, res) => {
+  try {
+    await Bus.findByIdAndDelete(req.params.id);
+
+    res.json({
+      success: true,
+      message: 'Bus deleted successfully',
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting bus',
+      error: error.message,
+    });
+  }
+};
+
+// Update bus location
+exports.updateBusLocation = async (req, res) => {
+  try {
+    const { latitude, longitude } = req.body;
+
+    const bus = await Bus.findOneAndUpdate(
+      { driver: req.userId },
+      {
+        currentLocation: {
+          latitude,
+          longitude,
+          timestamp: new Date(),
+        },
+      },
+      { new: true }
+    );
+
+    res.json({
+      success: true,
+      message: 'Location updated successfully',
+      data: bus,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error updating location',
+      error: error.message,
+    });
+  }
+};
