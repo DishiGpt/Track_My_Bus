@@ -1,20 +1,13 @@
-
 import React from 'react';
 
-interface HeaderProps {
-  title: string;
-  subtitle?: string;
-  onLogout?: () => void;
-}
-
-export const Header: React.FC<HeaderProps> = ({ title, subtitle, onLogout }) => (
+export const Header = ({ title, subtitle, onLogout }) => (
   <header className="bg-indigo-700 text-white p-4 shadow-lg sticky top-0 z-50 flex justify-between items-center">
     <div>
       <h1 className="text-xl font-bold">{title}</h1>
       {subtitle && <p className="text-xs text-indigo-200">{subtitle}</p>}
     </div>
     {onLogout && (
-      <button 
+      <button
         onClick={onLogout}
         className="bg-indigo-600 hover:bg-indigo-500 px-3 py-1 rounded text-sm transition-colors border border-indigo-400"
       >
@@ -24,8 +17,8 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, onLogout }) => 
   </header>
 );
 
-export const Button: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement>> = ({ children, className, ...props }) => (
-  <button 
+export const Button = ({ children, className, ...props }) => (
+  <button
     className={`w-full py-3 px-4 rounded-xl font-semibold transition-all active:scale-95 disabled:opacity-50 ${className}`}
     {...props}
   >
@@ -33,7 +26,7 @@ export const Button: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement>> = (
   </button>
 );
 
-export const Card: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => (
+export const Card = ({ children, className }) => (
   <div className={`bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden ${className}`}>
     {children}
   </div>

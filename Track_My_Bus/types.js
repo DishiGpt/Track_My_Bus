@@ -1,0 +1,6 @@
+export const UserRole = {
+  STUDENT: 'STUDENT',
+  DRIVER: 'DRIVER',
+  COORDINATOR: 'COORDINATOR',
+  ADMIN: 'ADMIN'
+};

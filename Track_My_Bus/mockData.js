@@ -1,14 +1,13 @@
+import { UserRole } from './types';
 
-import { Bus, UserRole, Driver, User } from './types';
-
-export const INITIAL_USERS: User[] = [
+export const INITIAL_USERS = [
   { id: 'u1', name: 'Super Admin', phoneNumber: '1111111111', password: 'password123', role: UserRole.ADMIN },
   { id: 'u2', name: 'Raj Singh', phoneNumber: '2222222222', password: 'password123', role: UserRole.COORDINATOR },
   { id: 'u3', name: 'Ramesh Kumar', phoneNumber: '3333333333', password: 'password123', role: UserRole.DRIVER },
   { id: 'u4', name: 'Rahul Sharma', phoneNumber: '4444444444', password: 'password123', role: UserRole.STUDENT },
 ];
 
-export const INITIAL_BUSES: Bus[] = [
+export const INITIAL_BUSES = [
   {
     id: '10',
     busNumber: '10',
@@ -67,7 +66,7 @@ export const INITIAL_BUSES: Bus[] = [
   }
 ];
 
-export const INITIAL_DRIVERS: Driver[] = [
+export const INITIAL_DRIVERS = [
   { id: 'd1', name: 'Mohan Lal', nameHindi: 'मोहन लाल', phoneNumber: '9876543210', assignedBus: '10' },
   { id: 'd2', name: 'Suresh Das', nameHindi: 'सुरेश दास', phoneNumber: '9876543211', assignedBus: '11' },
   { id: 'd3', name: 'Vikram Singh', nameHindi: 'विक्रम सिंह', phoneNumber: '9876543212', assignedBus: '12' },
