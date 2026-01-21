@@ -35,31 +35,64 @@ const BusTracker = ({ buses }) => {
     const [selectedBus, setSelectedBus] = useState(null);
     const [busLocation, setBusLocation] = useState(null);
     const [lastUpdated, setLastUpdated] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
 
     // Default center (India)
     const defaultCenter = [20.5937, 78.9629];
 
-    // Simulate fetching bus location every 10 seconds
+    // Fetch bus location from backend every 10 seconds
     useEffect(() => {
         if (!selectedBus) {
             setBusLocation(null);
             return;
         }
 
-        const fetchLocation = () => {
-            // In production, this would fetch from the backend
-            // For now, use the bus's currentLocation if available
-            if (selectedBus.currentLocation) {
-                setBusLocation({
-                    lat: selectedBus.currentLocation.latitude,
-                    lng: selectedBus.currentLocation.longitude,
-                });
-                setLastUpdated(new Date());
+        const fetchLocation = async () => {
+            try {
+                // Fetch fresh location from backend
+                const response = await fetch(
+                    `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/bus/${selectedBus._id}/location`,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                        },
+                    }
+                );
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.data) {
+                        setBusLocation({
+                            lat: data.data.latitude,
+                            lng: data.data.longitude,
+                        });
+                        setLastUpdated(new Date());
+                    }
+                } else {
+                    // Fallback to cached location if API fails
+                    if (selectedBus.currentLocation) {
+                        setBusLocation({
+                            lat: selectedBus.currentLocation.latitude,
+                            lng: selectedBus.currentLocation.longitude,
+                        });
+                        setLastUpdated(new Date(selectedBus.currentLocation.timestamp));
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching bus location:', error);
+                // Use cached location on error
+                if (selectedBus.currentLocation) {
+                    setBusLocation({
+                        lat: selectedBus.currentLocation.latitude,
+                        lng: selectedBus.currentLocation.longitude,
+                    });
+                }
             }
         };
 
         // Initial fetch
-        fetchLocation();
+        setIsLoading(true);
+        fetchLocation().finally(() => setIsLoading(false));
 
         // Set up interval for real-time updates (every 10 seconds)
         const interval = setInterval(fetchLocation, 10000);
@@ -88,8 +121,8 @@ const BusTracker = ({ buses }) => {
                         <div
                             key={bus._id}
                             className={`p-4 rounded-lg border cursor-pointer transition ${selectedBus?._id === bus._id
-                                    ? 'bg-blue-50 border-blue-500 shadow-md'
-                                    : 'bg-gray-50 hover:bg-gray-100 border-gray-200'
+                                ? 'bg-blue-50 border-blue-500 shadow-md'
+                                : 'bg-gray-50 hover:bg-gray-100 border-gray-200'
                                 }`}
                             onClick={() => setSelectedBus(bus)}
                         >
