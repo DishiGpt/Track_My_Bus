@@ -6,7 +6,7 @@ exports.getAllBuses = async (req, res) => {
   try {
     const buses = await Bus.find()
       .populate('driver', 'name phone')
-      .populate('route', 'name startingPoint')
+      .populate('route', 'name startingPoint routeDetails waypoints')
       .populate('coordinator', 'name phone');
 
     res.json({
@@ -27,7 +27,7 @@ exports.getBusesForToday = async (req, res) => {
   try {
     const buses = await Bus.find({ isAvailableToday: true })
       .populate('driver', 'name phone')
-      .populate('route', 'name startingPoint waypoints');
+      .populate('route', 'name startingPoint routeDetails waypoints');
 
     res.json({
       success: true,
@@ -130,7 +130,7 @@ exports.deleteBus = async (req, res) => {
 exports.updateBusLocation = async (req, res) => {
   try {
     const { latitude, longitude } = req.body;
-    
+
     const io = req.app.get('io');
     io.to(`bus:${bus._id}`).emit('location-update', {
       busId: bus._id,
