@@ -104,12 +104,12 @@ const StudentManagement = () => {
                         onChange={(e) => setForm({ ...form, phone: e.target.value })}
                         required
                     />
-                    <input
+                    {/* <input
                         className="w-full border rounded px-3 py-2"
                         placeholder="Roll Number"
                         value={form.rollNumber}
                         onChange={(e) => setForm({ ...form, rollNumber: e.target.value })}
-                    />
+                    /> */}
                     <div className="flex gap-2">
                         <button
                             type="submit"

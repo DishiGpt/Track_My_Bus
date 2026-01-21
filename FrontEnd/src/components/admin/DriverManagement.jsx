@@ -101,12 +101,12 @@ const AdminDriverManagement = () => {
                         value={form.email}
                         onChange={(e) => setForm({ ...form, email: e.target.value })}
                     />
-                    <input
+                    {/* <input
                         className="w-full border rounded px-3 py-2"
                         placeholder="License Number"
                         value={form.licenseNumber}
                         onChange={(e) => setForm({ ...form, licenseNumber: e.target.value })}
-                    />
+                    /> */}
                     <div className="flex gap-2">
                         <button
                             type="submit"

@@ -1,7 +1,0 @@
-{
-  "name": "Track My Bus",
-  "description": "Professional college bus tracking system with role-based interfaces for students, drivers, coordinators, and admins. Features real-time route visualization and localized languages.",
-  "requestFramePermissions": [
-    "geolocation"
-  ]
-}
