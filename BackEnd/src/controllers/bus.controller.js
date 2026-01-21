@@ -126,17 +126,12 @@ exports.deleteBus = async (req, res) => {
   }
 };
 
-// Update bus location
+// Update bus location (called by driver app)
 exports.updateBusLocation = async (req, res) => {
   try {
     const { latitude, longitude } = req.body;
 
-    const io = req.app.get('io');
-    io.to(`bus:${bus._id}`).emit('location-update', {
-      busId: bus._id,
-      location: bus.currentLocation,
-    });
-
+    // First, update the bus location
     const bus = await Bus.findOneAndUpdate(
       { driver: req.userId },
       {
@@ -149,10 +144,26 @@ exports.updateBusLocation = async (req, res) => {
       { new: true }
     );
 
+    if (!bus) {
+      return res.status(404).json({
+        success: false,
+        message: 'No bus assigned to this driver',
+      });
+    }
+
+    // Emit socket event for real-time updates (if socket.io is configured)
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`bus:${bus._id}`).emit('location-update', {
+        busId: bus._id,
+        location: bus.currentLocation,
+      });
+    }
+
     res.json({
       success: true,
       message: 'Location updated successfully',
-      data: bus,
+      data: bus.currentLocation,
     });
   } catch (error) {
     res.status(500).json({
