@@ -5,9 +5,7 @@ const Route = require('../models/Route.model');
 // Get all coordinators (admin only)
 exports.getAllCoordinators = async (req, res) => {
   try {
-    const coordinators = await User.find({ role: 'coordinator' }).select(
-      '-passwordHash'
-    );
+    const coordinators = await User.find({ role: 'coordinator' });
 
     res.json({
       success: true,
@@ -40,7 +38,6 @@ exports.createCoordinator = async (req, res) => {
       phone,
       email,
       role: 'coordinator',
-      passwordHash: 'default-password',
       isVerified: true,
     });
 
@@ -69,7 +66,7 @@ exports.updateCoordinator = async (req, res) => {
       req.params.id,
       { name, phone, email },
       { new: true }
-    ).select('-passwordHash');
+    );
 
     res.json({
       success: true,

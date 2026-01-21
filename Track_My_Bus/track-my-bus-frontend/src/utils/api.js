@@ -19,8 +19,8 @@ api.interceptors.request.use((config) => {
 export const authAPI = {
   requestOTP: (phone, email, purpose) =>
     api.post('/auth/request-otp', { phone, email, purpose }),
-  signup: (name, phone, email, otp, password) =>
-    api.post('/auth/signup', { name, phone, email, otp, password }),
+  signup: (name, phone, email, otp) =>
+    api.post('/auth/signup', { name, phone, email, otp }),
   login: (phone, email, otp) =>
     api.post('/auth/login', { phone, email, otp }),
   getProfile: () => api.get('/auth/profile'),
@@ -51,9 +51,43 @@ export const driverAPI = {
 // Route endpoints
 export const routeAPI = {
   getAllRoutes: () => api.get('/route'),
+  getRoute: (id) => api.get(`/route/${id}`),
   createRoute: (routeData) => api.post('/route', routeData),
   updateRoute: (id, routeData) => api.put(`/route/${id}`, routeData),
   deleteRoute: (id) => api.delete(`/route/${id}`),
+};
+
+// Student endpoints
+export const studentAPI = {
+  getProfile: () => api.get('/student/profile'),
+  updateProfile: (profileData) => api.put('/student/profile', profileData),
+  getAllStudents: () => api.get('/student'),
+};
+
+// Coordinator endpoints
+export const coordinatorAPI = {
+  getBuses: () => api.get('/coordinator/buses'),
+  getRoutes: () => api.get('/coordinator/routes'),
+  getAllCoordinators: () => api.get('/coordinator'),
+  createCoordinator: (data) => api.post('/coordinator', data),
+  updateCoordinator: (id, data) => api.put(`/coordinator/${id}`, data),
+  deleteCoordinator: (id) => api.delete(`/coordinator/${id}`),
+};
+
+// Admin endpoints
+export const adminAPI = {
+  getAnalytics: () => api.get('/admin/analytics'),
+  getAllUsers: () => api.get('/admin/users'),
+  createStudent: (data) => api.post('/admin/students', data),
+  updateStudent: (id, data) => api.put(`/admin/students/${id}`, data),
+  deleteStudent: (id) => api.delete(`/admin/students/${id}`),
+  sendBroadcast: (data) => api.post('/admin/broadcast', data),
+};
+
+// Broadcast endpoints
+export const broadcastAPI = {
+  create: (data) => api.post('/broadcasts', data),
+  getAll: () => api.get('/broadcasts'),
 };
 
 export default api;

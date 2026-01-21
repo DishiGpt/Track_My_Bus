@@ -38,10 +38,10 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  const signup = useCallback(async (name, phone, email, otp, password) => {
+  const signup = useCallback(async (name, phone, email, otp) => {
     setLoading(true);
     try {
-      const response = await authAPI.signup(name, phone, email, otp, password);
+      const response = await authAPI.signup(name, phone, email, otp);
       if (response.data.success) {
         const { token, user } = response.data.data;
         setToken(token);

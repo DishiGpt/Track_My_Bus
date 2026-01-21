@@ -1,15 +1,6 @@
 const User = require('../models/User.model');
 const { createOTP, verifyOTP } = require('../utils/otp.utils');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
-
-const generateToken = (userId, role) => {
-  return jwt.sign(
-    { userId, role },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRE || '7d' }
-  );
-};
+const { generateToken } = require('../utils/jwt');
 
 // Request OTP for signup/login
 exports.requestOTP = async (req, res) => {
@@ -59,7 +50,7 @@ exports.requestOTP = async (req, res) => {
 // Signup
 exports.signup = async (req, res) => {
   try {
-    const { name, phone, email, otp, password } = req.body;
+    const { name, phone, email, otp } = req.body;
 
     // Verify OTP
     const { valid } = await verifyOTP(phone, email, otp);
@@ -69,7 +60,6 @@ exports.signup = async (req, res) => {
         message: 'Invalid OTP',
       });
     }
-
     // Check if user exists
     const existingUser = await User.findOne({ phone });
     if (existingUser) {
@@ -79,12 +69,11 @@ exports.signup = async (req, res) => {
       });
     }
 
-    // Create user
+    // Create user (OTP-based auth, no password needed)
     const user = new User({
       name,
       phone,
       email,
-      passwordHash: password || 'default-password',
       role: 'student',
       isVerified: true,
       profileComplete: true,
@@ -174,7 +163,7 @@ exports.login = async (req, res) => {
 // Get profile
 exports.getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.userId).select('-passwordHash');
+    const user = await User.findById(req.userId);
     res.json({
       success: true,
       data: user,
@@ -196,7 +185,7 @@ exports.updateProfile = async (req, res) => {
       req.userId,
       { name, email },
       { new: true }
-    ).select('-passwordHash');
+    ).select();
 
     res.json({
       success: true,

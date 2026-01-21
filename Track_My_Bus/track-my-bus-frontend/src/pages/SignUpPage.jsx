@@ -10,7 +10,6 @@ const SignUpPage = () => {
     name: '',
     phone: '',
     email: '',
-    password: '',
   });
   const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
@@ -42,8 +41,7 @@ const SignUpPage = () => {
       formData.name,
       formData.phone,
       formData.email,
-      otp,
-      formData.password || 'default'
+      otp
     );
 
     if (result.success) {

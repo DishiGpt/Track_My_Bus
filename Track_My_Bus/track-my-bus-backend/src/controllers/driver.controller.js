@@ -4,7 +4,7 @@ const Bus = require('../models/Bus.model');
 // Get all drivers (for admin/coordinator)
 exports.getAllDrivers = async (req, res) => {
   try {
-    const drivers = await User.find({ role: 'driver' }).select('-passwordHash');
+    const drivers = await User.find({ role: 'driver' });
 
     res.json({
       success: true,
@@ -38,7 +38,6 @@ exports.createDriver = async (req, res) => {
       phone,
       email,
       role: 'driver',
-      passwordHash: 'default-password',
       isVerified: true,
     });
 
@@ -71,7 +70,7 @@ exports.updateDriver = async (req, res) => {
       req.params.id,
       { name, phone, email },
       { new: true }
-    ).select('-passwordHash');
+    );
 
     if (busId) {
       await Bus.findByIdAndUpdate(req.params.id, { driver: busId });

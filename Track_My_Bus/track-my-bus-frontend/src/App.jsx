@@ -6,6 +6,8 @@ import SignUpPage from './pages/SignUpPage';
 import LoginPage from './pages/LoginPage';
 import StudentPage from './pages/StudentPage';
 import DriverPage from './pages/DriverPage';
+import AdminPage from './pages/AdminPage';
+import CoordinatorPage from './pages/CoordinatorPage';
 
 function App() {
   return (
@@ -28,6 +30,22 @@ function App() {
             element={
               <ProtectedRoute requiredRole="driver">
                 <DriverPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/coordinator"
+            element={
+              <ProtectedRoute requiredRole="coordinator">
+                <CoordinatorPage />
               </ProtectedRoute>
             }
           />

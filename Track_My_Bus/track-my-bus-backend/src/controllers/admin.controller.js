@@ -38,7 +38,7 @@ exports.getAllUsers = async (req, res) => {
     const { role } = req.query;
     const query = role ? { role } : {};
 
-    const users = await User.find(query).select('-passwordHash');
+    const users = await User.find(query);
 
     res.json({
       success: true,
@@ -71,7 +71,6 @@ exports.createStudent = async (req, res) => {
       phone,
       email,
       role: 'student',
-      passwordHash: 'default-password',
       isVerified: true,
     });
 
@@ -100,7 +99,7 @@ exports.updateStudent = async (req, res) => {
       req.params.id,
       { name, phone, email },
       { new: true }
-    ).select('-passwordHash');
+    );
 
     res.json({
       success: true,

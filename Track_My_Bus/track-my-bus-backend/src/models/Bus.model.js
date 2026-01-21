@@ -47,8 +47,8 @@ const busSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-busSchema.index({ busNumber: 1 });
-busSchema.index({ driver: 1 });
-busSchema.index({ route: 1 });
+// busSchema.index({ busNumber: 1 });
+// busSchema.index({ driver: 1 });
+// busSchema.index({ route: 1 });
 
 module.exports = mongoose.model('Bus', busSchema);

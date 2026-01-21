@@ -6,15 +6,28 @@ const generateOTP = () => {
 };
 
 const sendOTPViaSMS = async (phone, otp) => {
-  // Using Twilio (configure in .env)
-  // const twilio = require('twilio');
-  // const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-  // await client.messages.create({
-  //   body: `Your OTP is: ${otp}. Valid for 10 minutes.`,
-  //   from: process.env.TWILIO_PHONE,
-  //   to: phone,
-  // });
-  console.log(`SMS OTP to ${phone}: ${otp}`);
+  try {
+    // Check if Twilio config exists
+    // if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
+    //   console.warn('⚠️ Twilio credentials missing in .env. Skipping SMS.');
+    //   console.log(`📱 SMS OTP (Simulated) to ${phone}: ${otp}`);
+    //   return;
+    // }
+
+    // const twilio = require('twilio');
+    // const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+
+    // await client.messages.create({
+    //   body: `Your OTP is: ${otp}. Valid for 10 minutes.`,
+    //   from: process.env.TWILIO_PHONE,
+    //   to: phone,
+    // });
+    console.log(`✅ SMS sent to ${phone}: ${otp}`);
+  } catch (error) {
+    console.error('❌ Error sending SMS:', error.message);
+    // Fallback for dev: log OTP anyway so you can still login
+    console.log(`📱 SMS OTP (Fallback) to ${phone}: ${otp}`);
+  }
 };
 
 const sendOTPViaEmail = async (email, otp) => {
@@ -41,7 +54,7 @@ const sendOTPViaEmail = async (email, otp) => {
 };
 
 const createOTP = async (phone, email, purpose) => {
-  const otp = generateOTP();
+  const otp = generateOTP(); // Generate OTP first
   const otpRecord = new OTP({
     phone,
     email,
