@@ -11,8 +11,6 @@ const CoordinatorDriverManagement = () => {
     const emptyForm = {
         name: '',
         phone: '',
-        email: '',
-        licenseNumber: '',
     };
     const [form, setForm] = useState(emptyForm);
 
@@ -40,8 +38,6 @@ const CoordinatorDriverManagement = () => {
         setForm({
             name: driver.name || '',
             phone: driver.phone || '',
-            email: driver.email || '',
-            licenseNumber: driver.licenseNumber || '',
         });
     };
 
@@ -94,19 +90,6 @@ const CoordinatorDriverManagement = () => {
                         onChange={(e) => setForm({ ...form, phone: e.target.value })}
                         required
                     />
-                    <input
-                        className="w-full border rounded px-3 py-2"
-                        placeholder="Email"
-                        type="email"
-                        value={form.email}
-                        onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    />
-                    <input
-                        className="w-full border rounded px-3 py-2"
-                        placeholder="License Number"
-                        value={form.licenseNumber}
-                        onChange={(e) => setForm({ ...form, licenseNumber: e.target.value })}
-                    />
                     <div className="flex gap-2">
                         <button
                             type="submit"
@@ -143,10 +126,6 @@ const CoordinatorDriverManagement = () => {
                             <div>
                                 <p className="font-semibold">{driver.name}</p>
                                 <p className="text-sm text-gray-600">{driver.phone}</p>
-                                {driver.email && <p className="text-sm text-gray-600">{driver.email}</p>}
-                                {driver.licenseNumber && (
-                                    <p className="text-xs text-gray-500">License: {driver.licenseNumber}</p>
-                                )}
                             </div>
                             <div className="flex flex-col gap-2">
                                 <button

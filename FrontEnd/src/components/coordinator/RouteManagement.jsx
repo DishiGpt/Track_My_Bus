@@ -10,9 +10,8 @@ const CoordinatorRouteManagement = () => {
 
     const emptyForm = {
         name: '',
-        startPoint: '',
-        endPoint: '',
-        stops: '',
+        startingPoint: '',
+        routeDetails: '',
     };
     const [form, setForm] = useState(emptyForm);
 
@@ -39,9 +38,8 @@ const CoordinatorRouteManagement = () => {
         setEditingRoute(route);
         setForm({
             name: route.name || '',
-            startPoint: route.startPoint || '',
-            endPoint: route.endPoint || '',
-            stops: Array.isArray(route.stops) ? route.stops.join(', ') : '',
+            startingPoint: route.startingPoint || '',
+            routeDetails: route.routeDetails || '',
         });
     };
 
@@ -59,8 +57,9 @@ const CoordinatorRouteManagement = () => {
         e.preventDefault();
         setError('');
         const payload = {
-            ...form,
-            stops: form.stops.split(',').map((s) => s.trim()).filter(Boolean),
+            name: form.name,
+            startingPoint: form.startingPoint,
+            routeDetails: form.routeDetails,
         };
         try {
             if (editingRoute) {
@@ -93,23 +92,17 @@ const CoordinatorRouteManagement = () => {
                     />
                     <input
                         className="w-full border rounded px-3 py-2"
-                        placeholder="Start Point"
-                        value={form.startPoint}
-                        onChange={(e) => setForm({ ...form, startPoint: e.target.value })}
+                        placeholder="Starting Point"
+                        value={form.startingPoint}
+                        onChange={(e) => setForm({ ...form, startingPoint: e.target.value })}
                         required
                     />
-                    <input
+                    <textarea
                         className="w-full border rounded px-3 py-2"
-                        placeholder="End Point"
-                        value={form.endPoint}
-                        onChange={(e) => setForm({ ...form, endPoint: e.target.value })}
-                        required
-                    />
-                    <input
-                        className="w-full border rounded px-3 py-2"
-                        placeholder="Stops (comma-separated)"
-                        value={form.stops}
-                        onChange={(e) => setForm({ ...form, stops: e.target.value })}
+                        placeholder="Route Details (e.g., Point A → Point B → Point C)"
+                        value={form.routeDetails}
+                        onChange={(e) => setForm({ ...form, routeDetails: e.target.value })}
+                        rows={3}
                     />
                     <div className="flex gap-2">
                         <button
@@ -147,11 +140,11 @@ const CoordinatorRouteManagement = () => {
                             <div>
                                 <p className="font-semibold">{route.name}</p>
                                 <p className="text-sm text-gray-600">
-                                    {route.startPoint} → {route.endPoint}
+                                    Starting Point: {route.startingPoint}
                                 </p>
-                                {route.stops?.length > 0 && (
+                                {route.routeDetails && (
                                     <p className="text-xs text-gray-500">
-                                        Stops: {route.stops.join(', ')}
+                                        Route Details: {route.routeDetails}
                                     </p>
                                 )}
                             </div>

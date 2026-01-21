@@ -8,7 +8,7 @@ const StudentPage = () => {
   const [selectedBus, setSelectedBus] = useState(null);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('buses');
-  const [profileData, setProfileData] = useState({ name: '', email: '' });
+  const [profileData, setProfileData] = useState({ name: '' });
   const [saving, setSaving] = useState(false);
 
   const tabs = [
@@ -23,7 +23,7 @@ const StudentPage = () => {
 
   useEffect(() => {
     if (user) {
-      setProfileData({ name: user.name || '', email: user.email || '' });
+      setProfileData({ name: user.name || '' });
     }
   }, [user]);
 
@@ -44,7 +44,7 @@ const StudentPage = () => {
   const handleUpdateProfile = async () => {
     setSaving(true);
     try {
-      await updateProfile(profileData.name, profileData.email);
+      await updateProfile(profileData.name);
       alert('Profile updated successfully!');
     } catch (error) {
       alert('Failed to update profile');
@@ -80,8 +80,8 @@ const StudentPage = () => {
               key={t.id}
               onClick={() => setActiveTab(t.id)}
               className={`px-4 py-2 rounded-lg flex items-center gap-2 transition ${activeTab === t.id
-                  ? 'bg-blue-600 text-white shadow-lg'
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                ? 'bg-blue-600 text-white shadow-lg'
+                : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                 }`}
             >
               <span>{t.icon}</span>
@@ -164,15 +164,7 @@ const StudentPage = () => {
                     className="w-full border rounded px-4 py-2"
                   />
                 </div>
-                <div>
-                  <label className="block text-gray-700 font-semibold mb-2">Email</label>
-                  <input
-                    type="email"
-                    value={profileData.email}
-                    onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
-                    className="w-full border rounded px-4 py-2"
-                  />
-                </div>
+
                 <div>
                   <label className="block text-gray-700 font-semibold mb-2">Phone</label>
                   <input

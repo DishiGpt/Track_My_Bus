@@ -11,7 +11,6 @@ const AdminCoordinatorManagement = () => {
     const emptyForm = {
         name: '',
         phone: '',
-        email: '',
     };
     const [form, setForm] = useState(emptyForm);
 
@@ -39,7 +38,6 @@ const AdminCoordinatorManagement = () => {
         setForm({
             name: coordinator.name || '',
             phone: coordinator.phone || '',
-            email: coordinator.email || '',
         });
     };
 
@@ -92,13 +90,6 @@ const AdminCoordinatorManagement = () => {
                         onChange={(e) => setForm({ ...form, phone: e.target.value })}
                         required
                     />
-                    <input
-                        className="w-full border rounded px-3 py-2"
-                        placeholder="Email"
-                        type="email"
-                        value={form.email}
-                        onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    />
                     <div className="flex gap-2">
                         <button
                             type="submit"
@@ -135,7 +126,6 @@ const AdminCoordinatorManagement = () => {
                             <div>
                                 <p className="font-semibold">{coordinator.name}</p>
                                 <p className="text-sm text-gray-600">{coordinator.phone}</p>
-                                {coordinator.email && <p className="text-sm text-gray-600">{coordinator.email}</p>}
                             </div>
                             <div className="flex flex-col gap-2">
                                 <button

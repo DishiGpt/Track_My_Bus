@@ -1,4 +1,4 @@
-// src/components/coordinator/CoordinatorBusManagement.jsx
+// src/components/coordinator/BusManagement.jsx
 import React, { useEffect, useState } from 'react';
 import { busAPI, routeAPI, driverAPI } from '../../utils/api';
 
@@ -8,6 +8,7 @@ const CoordinatorBusManagement = () => {
   const [drivers, setDrivers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [editingBus, setEditingBus] = useState(null);
+  const [error, setError] = useState('');
 
   const emptyForm = {
     busNumber: '',
@@ -20,6 +21,7 @@ const CoordinatorBusManagement = () => {
 
   const loadData = async () => {
     setLoading(true);
+    setError('');
     try {
       const [b, r, d] = await Promise.all([
         busAPI.getAllBuses(),
@@ -29,6 +31,8 @@ const CoordinatorBusManagement = () => {
       if (b.data.success) setBuses(b.data.data);
       if (r.data.success) setRoutes(r.data.data);
       if (d.data.success) setDrivers(d.data.data);
+    } catch (err) {
+      setError('Failed to load data');
     } finally {
       setLoading(false);
     }
@@ -51,20 +55,29 @@ const CoordinatorBusManagement = () => {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this bus?')) return;
-    await busAPI.deleteBus(id);
-    loadData();
+    try {
+      await busAPI.deleteBus(id);
+      loadData();
+    } catch (err) {
+      setError('Failed to delete bus');
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (editingBus) {
-      await busAPI.updateBus(editingBus._id, form);
-    } else {
-      await busAPI.createBus(form);
+    setError('');
+    try {
+      if (editingBus) {
+        await busAPI.updateBus(editingBus._id, form);
+      } else {
+        await busAPI.createBus(form);
+      }
+      setEditingBus(null);
+      setForm(emptyForm);
+      loadData();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to save bus');
     }
-    setEditingBus(null);
-    setForm(emptyForm);
-    loadData();
   };
 
   return (
@@ -73,6 +86,7 @@ const CoordinatorBusManagement = () => {
         <h2 className="text-xl font-bold mb-4">
           {editingBus ? 'Edit Bus' : 'Add Bus'}
         </h2>
+        {error && <p className="text-red-600 text-sm mb-2">{error}</p>}
         <form onSubmit={handleSubmit} className="space-y-3">
           <input
             className="w-full border rounded px-3 py-2"

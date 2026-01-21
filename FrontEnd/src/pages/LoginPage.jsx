@@ -1,29 +1,23 @@
 import React, { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const { requestOTP, login, loading } = useAuth();
   const [step, setStep] = useState(1);
-  const [loginMethod, setLoginMethod] = useState('phone'); // phone or email
-  const [phoneOrEmail, setPhoneOrEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
 
   const handleRequestOTP = async (e) => {
     e.preventDefault();
-    if (!phoneOrEmail) {
-      setError('Please enter phone or email');
+    if (!phone) {
+      setError('Please enter phone number');
       return;
     }
 
-    const result = await requestOTP(
-      loginMethod === 'phone' ? phoneOrEmail : '',
-      loginMethod === 'email' ? phoneOrEmail : '',
-      'login'
-    );
+    const result = await requestOTP(phone, 'login');
 
     if (result.success) {
       setStep(2);
@@ -40,11 +34,7 @@ const LoginPage = () => {
       return;
     }
 
-    const result = await login(
-      loginMethod === 'phone' ? phoneOrEmail : '',
-      loginMethod === 'email' ? phoneOrEmail : '',
-      otp
-    );
+    const result = await login(phone, otp);
 
     if (result.success) {
       const role = result.data.user.role;
@@ -75,40 +65,11 @@ const LoginPage = () => {
 
         {step === 1 ? (
           <form onSubmit={handleRequestOTP} className="space-y-4">
-            <div className="flex gap-2 mb-4">
-              <button
-                type="button"
-                onClick={() => setLoginMethod('phone')}
-                className={`flex-1 py-2 rounded ${
-                  loginMethod === 'phone'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200'
-                }`}
-              >
-                Phone
-              </button>
-              <button
-                type="button"
-                onClick={() => setLoginMethod('email')}
-                className={`flex-1 py-2 rounded ${
-                  loginMethod === 'email'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200'
-                }`}
-              >
-                Email
-              </button>
-            </div>
-
             <input
-              type={loginMethod === 'email' ? 'email' : 'tel'}
-              placeholder={
-                loginMethod === 'email'
-                  ? 'Enter your email'
-                  : 'Enter your phone'
-              }
-              value={phoneOrEmail}
-              onChange={(e) => setPhoneOrEmail(e.target.value)}
+              type="tel"
+              placeholder="Enter your phone number"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
               className="w-full border rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
@@ -125,7 +86,7 @@ const LoginPage = () => {
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="bg-blue-50 p-3 rounded text-center">
               <p className="text-sm text-gray-600">
-                OTP sent to {phoneOrEmail}
+                OTP sent to {phone}
               </p>
             </div>
             <input

@@ -147,8 +147,8 @@ const DriverPage = () => {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`px-4 py-2 rounded-lg flex items-center gap-2 transition ${activeTab === tab.id
-                  ? 'bg-green-600 text-white shadow-lg'
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                ? 'bg-green-600 text-white shadow-lg'
+                : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                 }`}
             >
               <span>{tab.icon}</span>
@@ -195,19 +195,26 @@ const DriverPage = () => {
               <div>
                 <h2 className="text-2xl font-bold mb-4">{t.routeDetails}</h2>
                 <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                  <p className="text-gray-600">{bus.route?.routeDetails}</p>
+                  <p className="text-gray-600 mb-2">Starting Point:</p>
+                  <p className="text-xl font-bold mb-4">{bus.route?.startingPoint}</p>
+                  <p className="text-gray-600 mb-2">Route Details:</p>
+                  <p className="text-lg">{bus.route?.routeDetails || 'No details available'}</p>
                 </div>
-                <h3 className="text-xl font-bold mb-3">{t.waypoints}</h3>
-                <div className="space-y-2">
-                  {bus.route?.waypoints?.map((wp, index) => (
-                    <div key={index} className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
-                      <span className="bg-green-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">
-                        {wp.order || index + 1}
-                      </span>
-                      <span className="font-medium">{wp.name}</span>
+                {bus.route?.waypoints?.length > 0 && (
+                  <>
+                    <h3 className="text-xl font-bold mb-3">{t.waypoints}</h3>
+                    <div className="space-y-2">
+                      {bus.route.waypoints.map((wp, index) => (
+                        <div key={index} className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
+                          <span className="bg-green-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">
+                            {wp.order || index + 1}
+                          </span>
+                          <span className="font-medium">{wp.name}</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </>
+                )}
               </div>
             )}
 
@@ -222,8 +229,8 @@ const DriverPage = () => {
                   <button
                     onClick={() => setGpsEnabled(!gpsEnabled)}
                     className={`px-8 py-4 rounded-lg text-white font-bold text-xl transition ${gpsEnabled
-                        ? 'bg-red-600 hover:bg-red-700'
-                        : 'bg-green-600 hover:bg-green-700'
+                      ? 'bg-red-600 hover:bg-red-700'
+                      : 'bg-green-600 hover:bg-green-700'
                       }`}
                   >
                     {gpsEnabled ? t.stop : t.start}

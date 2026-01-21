@@ -26,10 +26,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const requestOTP = useCallback(async (phone, email, purpose) => {
+  const requestOTP = useCallback(async (phone, purpose) => {
     setLoading(true);
     try {
-      const response = await authAPI.requestOTP(phone, email, purpose);
+      const response = await authAPI.requestOTP(phone, purpose);
       return response.data;
     } catch (error) {
       return { success: false, message: error.response?.data?.message };
@@ -38,10 +38,10 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  const signup = useCallback(async (name, phone, email, otp) => {
+  const signup = useCallback(async (name, phone, otp) => {
     setLoading(true);
     try {
-      const response = await authAPI.signup(name, phone, email, otp);
+      const response = await authAPI.signup(name, phone, otp);
       if (response.data.success) {
         const { token, user } = response.data.data;
         setToken(token);
@@ -57,10 +57,10 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  const login = useCallback(async (phone, email, otp) => {
+  const login = useCallback(async (phone, otp) => {
     setLoading(true);
     try {
-      const response = await authAPI.login(phone, email, otp);
+      const response = await authAPI.login(phone, otp);
       if (response.data.success) {
         const { token, user } = response.data.data;
         setToken(token);
@@ -83,10 +83,10 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('user');
   }, []);
 
-  const updateProfile = useCallback(async (name, email) => {
+  const updateProfile = useCallback(async (name) => {
     setLoading(true);
     try {
-      const response = await authAPI.updateProfile(name, email);
+      const response = await authAPI.updateProfile(name);
       if (response.data.success) {
         setUser(response.data.data);
       }

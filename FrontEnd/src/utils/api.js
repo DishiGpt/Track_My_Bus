@@ -17,15 +17,15 @@ api.interceptors.request.use((config) => {
 
 // Auth endpoints
 export const authAPI = {
-  requestOTP: (phone, email, purpose) =>
-    api.post('/auth/request-otp', { phone, email, purpose }),
-  signup: (name, phone, email, otp) =>
-    api.post('/auth/signup', { name, phone, email, otp }),
-  login: (phone, email, otp) =>
-    api.post('/auth/login', { phone, email, otp }),
+  requestOTP: (phone, purpose) =>
+    api.post('/auth/request-otp', { phone, purpose }),
+  signup: (name, phone, otp) =>
+    api.post('/auth/signup', { name, phone, otp }),
+  login: (phone, otp) =>
+    api.post('/auth/login', { phone, otp }),
   getProfile: () => api.get('/auth/profile'),
-  updateProfile: (name, email) =>
-    api.put('/auth/profile', { name, email }),
+  updateProfile: (name) =>
+    api.put('/auth/profile', { name }),
 };
 
 // Bus endpoints

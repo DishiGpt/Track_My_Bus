@@ -5,24 +5,18 @@ const { generateToken } = require('../utils/jwt');
 // Request OTP for signup/login
 exports.requestOTP = async (req, res) => {
   try {
-    const { phone, email, purpose } = req.body; // purpose: 'signup' or 'login'
+    const { phone, purpose } = req.body; // purpose: 'signup' or 'login'
 
-    if (!phone && !email) {
+    if (!phone) {
       return res.status(400).json({
         success: false,
-        message: 'Phone or email required',
+        message: 'Phone number is required',
       });
     }
 
     // Check if user exists for login
     if (purpose === 'login') {
-      let user;
-      if (phone) {
-        user = await User.findOne({ phone });
-      } else {
-        user = await User.findOne({ email });
-      }
-
+      const user = await User.findOne({ phone });
       if (!user) {
         return res.status(404).json({
           success: false,
@@ -32,7 +26,7 @@ exports.requestOTP = async (req, res) => {
     }
 
     // Generate and send OTP
-    await createOTP(phone, email, purpose);
+    await createOTP(phone, purpose);
 
     res.json({
       success: true,
@@ -50,16 +44,17 @@ exports.requestOTP = async (req, res) => {
 // Signup
 exports.signup = async (req, res) => {
   try {
-    const { name, phone, email, otp } = req.body;
+    const { name, phone, otp } = req.body;
 
     // Verify OTP
-    const { valid } = await verifyOTP(phone, email, otp);
+    const { valid } = await verifyOTP(phone, otp);
     if (!valid) {
       return res.status(400).json({
         success: false,
         message: 'Invalid OTP',
       });
     }
+
     // Check if user exists
     const existingUser = await User.findOne({ phone });
     if (existingUser) {
@@ -73,7 +68,6 @@ exports.signup = async (req, res) => {
     const user = new User({
       name,
       phone,
-      email,
       role: 'student',
       isVerified: true,
       profileComplete: true,
@@ -91,7 +85,6 @@ exports.signup = async (req, res) => {
         user: {
           id: user._id,
           name: user.name,
-          email: user.email,
           phone: user.phone,
           role: user.role,
         },
@@ -109,10 +102,10 @@ exports.signup = async (req, res) => {
 // Login
 exports.login = async (req, res) => {
   try {
-    const { phone, email, otp } = req.body;
+    const { phone, otp } = req.body;
 
     // Verify OTP
-    const { valid } = await verifyOTP(phone, email, otp);
+    const { valid } = await verifyOTP(phone, otp);
     if (!valid) {
       return res.status(400).json({
         success: false,
@@ -121,12 +114,7 @@ exports.login = async (req, res) => {
     }
 
     // Find user
-    let user;
-    if (phone) {
-      user = await User.findOne({ phone });
-    } else {
-      user = await User.findOne({ email });
-    }
+    const user = await User.findOne({ phone });
 
     if (!user) {
       return res.status(401).json({
@@ -145,7 +133,6 @@ exports.login = async (req, res) => {
         user: {
           id: user._id,
           name: user.name,
-          email: user.email,
           phone: user.phone,
           role: user.role,
         },
@@ -180,10 +167,10 @@ exports.getProfile = async (req, res) => {
 // Update profile
 exports.updateProfile = async (req, res) => {
   try {
-    const { name, email } = req.body;
+    const { name } = req.body;
     const user = await User.findByIdAndUpdate(
       req.userId,
-      { name, email },
+      { name },
       { new: true }
     ).select();
 

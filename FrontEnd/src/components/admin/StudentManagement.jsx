@@ -10,10 +10,7 @@ const StudentManagement = () => {
 
     const emptyForm = {
         name: '',
-        email: '',
         phone: '',
-        rollNumber: '',
-        routeId: '',
     };
     const [form, setForm] = useState(emptyForm);
 
@@ -40,10 +37,7 @@ const StudentManagement = () => {
         setEditingStudent(student);
         setForm({
             name: student.name || '',
-            email: student.email || '',
             phone: student.phone || '',
-            rollNumber: student.rollNumber || '',
-            routeId: student.route?._id || student.route || '',
         });
     };
 
@@ -91,25 +85,11 @@ const StudentManagement = () => {
                     />
                     <input
                         className="w-full border rounded px-3 py-2"
-                        placeholder="Email"
-                        type="email"
-                        value={form.email}
-                        onChange={(e) => setForm({ ...form, email: e.target.value })}
-                        required
-                    />
-                    <input
-                        className="w-full border rounded px-3 py-2"
                         placeholder="Phone"
                         value={form.phone}
                         onChange={(e) => setForm({ ...form, phone: e.target.value })}
                         required
                     />
-                    {/* <input
-                        className="w-full border rounded px-3 py-2"
-                        placeholder="Roll Number"
-                        value={form.rollNumber}
-                        onChange={(e) => setForm({ ...form, rollNumber: e.target.value })}
-                    /> */}
                     <div className="flex gap-2">
                         <button
                             type="submit"
@@ -145,11 +125,7 @@ const StudentManagement = () => {
                         >
                             <div>
                                 <p className="font-semibold">{student.name}</p>
-                                <p className="text-sm text-gray-600">{student.email}</p>
                                 <p className="text-sm text-gray-600">{student.phone}</p>
-                                {student.rollNumber && (
-                                    <p className="text-xs text-gray-500">Roll: {student.rollNumber}</p>
-                                )}
                             </div>
                             <div className="flex flex-col gap-2">
                                 <button

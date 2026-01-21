@@ -5,11 +5,10 @@ import { useAuth } from '../hooks/useAuth';
 const SignUpPage = () => {
   const navigate = useNavigate();
   const { requestOTP, signup, loading } = useAuth();
-  const [step, setStep] = useState(1); // 1: Enter details, 2: Enter OTP
+  const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
-    email: '',
   });
   const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
@@ -21,7 +20,7 @@ const SignUpPage = () => {
       return;
     }
 
-    const result = await requestOTP(formData.phone, formData.email, 'signup');
+    const result = await requestOTP(formData.phone, 'signup');
     if (result.success) {
       setStep(2);
       setError('');
@@ -37,12 +36,7 @@ const SignUpPage = () => {
       return;
     }
 
-    const result = await signup(
-      formData.name,
-      formData.phone,
-      formData.email,
-      otp
-    );
+    const result = await signup(formData.name, formData.phone, otp);
 
     if (result.success) {
       navigate('/student');
@@ -83,15 +77,6 @@ const SignUpPage = () => {
               }
               className="w-full border rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
-            />
-            <input
-              type="email"
-              placeholder="Email (Optional)"
-              value={formData.email}
-              onChange={(e) =>
-                setFormData({ ...formData, email: e.target.value })
-              }
-              className="w-full border rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <button
               type="submit"
