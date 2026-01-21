@@ -2,11 +2,52 @@
 import React, { useEffect, useState } from 'react';
 import { driverAPI } from '../../utils/api';
 
-const CoordinatorDriverManagement = () => {
+const CoordinatorDriverManagement = ({ language = 'hi' }) => {
     const [drivers, setDrivers] = useState([]);
     const [loading, setLoading] = useState(false);
     const [editingDriver, setEditingDriver] = useState(null);
     const [error, setError] = useState('');
+
+    const translations = {
+        en: {
+            addDriver: 'Add Driver',
+            editDriver: 'Edit Driver',
+            name: 'Name',
+            phone: 'Phone',
+            save: 'Save',
+            update: 'Update',
+            cancel: 'Cancel',
+            drivers: 'Drivers',
+            loading: 'Loading…',
+            edit: 'Edit',
+            delete: 'Delete',
+            noDrivers: 'No drivers found.',
+            deleteConfirm: 'Delete this driver?',
+            failedToLoad: 'Failed to load drivers',
+            failedToDelete: 'Failed to delete driver',
+            failedToSave: 'Failed to save driver'
+        },
+        hi: {
+            addDriver: 'ड्राइवर जोड़ें',
+            editDriver: 'ड्राइवर संपादित करें',
+            name: 'नाम',
+            phone: 'फोन',
+            save: 'सेव करें',
+            update: 'अपडेट करें',
+            cancel: 'रद्द करें',
+            drivers: 'ड्राइवर',
+            loading: 'लोड हो रहा है…',
+            edit: 'संपादित करें',
+            delete: 'हटाएं',
+            noDrivers: 'कोई ड्राइवर नहीं मिला।',
+            deleteConfirm: 'इस ड्राइवर को हटाना है?',
+            failedToLoad: 'ड्राइवर लोड करने में विफल',
+            failedToDelete: 'ड्राइवर हटाने में विफल',
+            failedToSave: 'ड्राइवर सेव करने में विफल'
+        }
+    };
+
+    const t = translations[language];
 
     const emptyForm = {
         name: '',
@@ -23,10 +64,35 @@ const CoordinatorDriverManagement = () => {
                 setDrivers(res.data.data);
             }
         } catch (err) {
-            setError('Failed to load drivers');
+            setError(t.failedToLoad);
         } finally {
             setLoading(false);
         }
+    };
+
+    // Helper function to translate driver names
+    const translateDriverName = (driverName) => {
+        if (language === 'hi') {
+            const driverTranslations = {
+                'Ramesh Kumar': 'रमेश कुमार',
+                'Suresh Yadav': 'सुरेश यादव',
+                'Mahesh Singh': 'महेश सिंह',
+                'Dinesh Patel': 'दिनेश पटेल',
+                'Ram Singh': 'राम सिंह',
+                'Mohan Lal': 'मोहन लाल',
+                'Ravi Sharma': 'रवि शर्मा',
+                'Amit Verma': 'अमित वर्मा',
+                'Vijay Gupta': 'विजय गुप्ता',
+                'Sanjay Tiwari': 'संजय तिवारी',
+                'Rajesh Pandey': 'राजेश पांडे',
+                'Ashok Mishra': 'अशोक मिश्रा',
+                'Deepak Joshi': 'दीपक जोशी',
+                'Prakash Dubey': 'प्रकाश दुबे',
+                'Santosh Rai': 'संतोष राय'
+            };
+            return driverTranslations[driverName] || driverName;
+        }
+        return driverName;
     };
 
     useEffect(() => {
@@ -42,12 +108,12 @@ const CoordinatorDriverManagement = () => {
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm('Delete this driver?')) return;
+        if (!window.confirm(t.deleteConfirm)) return;
         try {
             await driverAPI.deleteDriver(id);
             loadDrivers();
         } catch (err) {
-            setError('Failed to delete driver');
+            setError(t.failedToDelete);
         }
     };
 
@@ -64,7 +130,7 @@ const CoordinatorDriverManagement = () => {
             setForm(emptyForm);
             loadDrivers();
         } catch (err) {
-            setError(err.response?.data?.message || 'Failed to save driver');
+            setError(err.response?.data?.message || t.failedToSave);
         }
     };
 
@@ -72,20 +138,20 @@ const CoordinatorDriverManagement = () => {
         <div className="grid md:grid-cols-2 gap-6">
             <div className="bg-white p-4 rounded shadow">
                 <h2 className="text-xl font-bold mb-4">
-                    {editingDriver ? 'Edit Driver' : 'Add Driver'}
+                    {editingDriver ? t.editDriver : t.addDriver}
                 </h2>
                 {error && <p className="text-red-600 text-sm mb-2">{error}</p>}
                 <form onSubmit={handleSubmit} className="space-y-3">
                     <input
                         className="w-full border rounded px-3 py-2"
-                        placeholder="Name"
+                        placeholder={t.name}
                         value={form.name}
                         onChange={(e) => setForm({ ...form, name: e.target.value })}
                         required
                     />
                     <input
                         className="w-full border rounded px-3 py-2"
-                        placeholder="Phone"
+                        placeholder={t.phone}
                         value={form.phone}
                         onChange={(e) => setForm({ ...form, phone: e.target.value })}
                         required
@@ -95,7 +161,7 @@ const CoordinatorDriverManagement = () => {
                             type="submit"
                             className="bg-blue-600 text-white px-4 py-2 rounded"
                         >
-                            {editingDriver ? 'Update' : 'Save'}
+                            {editingDriver ? t.update : t.save}
                         </button>
                         {editingDriver && (
                             <button
@@ -106,7 +172,7 @@ const CoordinatorDriverManagement = () => {
                                 }}
                                 className="border px-4 py-2 rounded"
                             >
-                                Cancel
+                                {t.cancel}
                             </button>
                         )}
                     </div>
@@ -115,7 +181,7 @@ const CoordinatorDriverManagement = () => {
 
             <div className="bg-white p-4 rounded shadow">
                 <h2 className="text-xl font-bold mb-4">
-                    Drivers {loading && <span className="text-sm text-gray-500">Loading…</span>}
+                    {t.drivers} {loading && <span className="text-sm text-gray-500">{t.loading}</span>}
                 </h2>
                 <div className="space-y-3 max-h-[500px] overflow-y-auto">
                     {drivers.map((driver) => (
@@ -124,7 +190,7 @@ const CoordinatorDriverManagement = () => {
                             className="border rounded p-3 flex justify-between items-start"
                         >
                             <div>
-                                <p className="font-semibold">{driver.name}</p>
+                                <p className="font-semibold">{translateDriverName(driver.name)}</p>
                                 <p className="text-sm text-gray-600">{driver.phone}</p>
                             </div>
                             <div className="flex flex-col gap-2">
@@ -132,19 +198,19 @@ const CoordinatorDriverManagement = () => {
                                     className="text-blue-600 text-sm"
                                     onClick={() => handleEdit(driver)}
                                 >
-                                    Edit
+                                    {t.edit}
                                 </button>
                                 <button
                                     className="text-red-600 text-sm"
                                     onClick={() => handleDelete(driver._id)}
                                 >
-                                    Delete
+                                    {t.delete}
                                 </button>
                             </div>
                         </div>
                     ))}
                     {!loading && drivers.length === 0 && (
-                        <p className="text-gray-500 text-sm">No drivers found.</p>
+                        <p className="text-gray-500 text-sm">{t.noDrivers}</p>
                     )}
                 </div>
             </div>

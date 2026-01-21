@@ -11,65 +11,68 @@ import RouteManagement from '../components/admin/RouteManagement';
 
 const AdminPage = () => {
   const { user, logout } = useAuth();
-  const [tab, setTab] = useState('analytics');
+  const [tab, setTab] = useState('home');
 
   const tabs = [
-    { id: 'analytics', label: 'Analytics', icon: '📊' },
-    { id: 'students', label: 'Students', icon: '👨‍🎓' },
-    { id: 'drivers', label: 'Drivers', icon: '🚗' },
-    { id: 'coordinators', label: 'Coordinators', icon: '👔' },
-    { id: 'buses', label: 'Buses', icon: '🚌' },
-    { id: 'routes', label: 'Routes', icon: '🛤️' },
-    { id: 'broadcast', label: 'Broadcast', icon: '📢' },
+    { id: 'home', label: 'HOME' },
+    { id: 'buses', label: 'BUSES' },
+    { id: 'coordinators', label: 'COORDINATORS' },
+    { id: 'students', label: 'STUDENTS' },
+    { id: 'drivers', label: 'DRIVERS' },
+    { id: 'routes', label: 'ROUTES' },
+    { id: 'broadcast', label: 'BROADCAST' },
   ];
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-gray-900 text-white p-4">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <h1 className="text-2xl font-bold">🛡️ Admin Dashboard</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm bg-gray-700 px-3 py-1 rounded-full">
-              {user?.name} (Admin)
-            </span>
+      {/* Header */}
+      <nav className="bg-purple-600 text-white">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-xl font-bold">Super Admin Dashboard</h1>
+              <p className="text-purple-200 text-sm">System Control Panel</p>
+            </div>
             <button
               onClick={logout}
-              className="bg-red-600 px-4 py-2 rounded hover:bg-red-700 transition"
+              className="bg-purple-700 hover:bg-purple-800 px-4 py-2 rounded-lg transition-colors"
             >
               Logout
             </button>
           </div>
         </div>
+
+        {/* Tab Navigation */}
+        <div className="border-t border-purple-500">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="flex space-x-8">
+              {tabs.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setTab(t.id)}
+                  className={`py-4 px-2 text-sm font-medium border-b-2 transition-colors ${
+                    tab === t.id
+                      ? 'border-white text-white'
+                      : 'border-transparent text-purple-200 hover:text-white hover:border-purple-300'
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
       </nav>
 
-      <div className="max-w-7xl mx-auto p-4">
-        {/* Tab Navigation */}
-        <div className="flex flex-wrap gap-2 mb-6 bg-white p-3 rounded-lg shadow">
-          {tabs.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`px-4 py-2 rounded-lg flex items-center gap-2 transition ${tab === t.id
-                  ? 'bg-gray-900 text-white shadow-lg'
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                }`}
-            >
-              <span>{t.icon}</span>
-              <span>{t.label}</span>
-            </button>
-          ))}
-        </div>
-
+      <div className="max-w-7xl mx-auto p-6">
         {/* Tab Content */}
-        <div className="bg-white rounded-lg shadow p-6">
-          {tab === 'analytics' && <AdminAnalytics />}
-          {tab === 'students' && <StudentManagement />}
-          {tab === 'drivers' && <DriverManagement />}
-          {tab === 'coordinators' && <CoordinatorManagement />}
-          {tab === 'buses' && <BusManagement />}
-          {tab === 'routes' && <RouteManagement />}
-          {tab === 'broadcast' && <BroadcastNotification />}
-        </div>
+        {tab === 'home' && <AdminAnalytics />}
+        {tab === 'students' && <StudentManagement />}
+        {tab === 'drivers' && <DriverManagement />}
+        {tab === 'coordinators' && <CoordinatorManagement />}
+        {tab === 'buses' && <BusManagement />}
+        {tab === 'routes' && <RouteManagement />}
+        {tab === 'broadcast' && <BroadcastNotification />}
       </div>
     </div>
   );

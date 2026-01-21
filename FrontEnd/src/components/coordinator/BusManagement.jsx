@@ -2,13 +2,68 @@
 import React, { useEffect, useState } from 'react';
 import { busAPI, routeAPI, driverAPI } from '../../utils/api';
 
-const CoordinatorBusManagement = () => {
+const CoordinatorBusManagement = ({ language = 'hi' }) => {
   const [buses, setBuses] = useState([]);
   const [routes, setRoutes] = useState([]);
   const [drivers, setDrivers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [editingBus, setEditingBus] = useState(null);
   const [error, setError] = useState('');
+
+  const translations = {
+    en: {
+      addBus: 'Add Bus',
+      editBus: 'Edit Bus',
+      busNumber: 'Bus Number',
+      selectRoute: 'Select Route',
+      selectDriver: 'Select Driver',
+      availableToday: 'Available today',
+      save: 'Save',
+      update: 'Update',
+      cancel: 'Cancel',
+      buses: 'Buses',
+      loading: 'Loading…',
+      route: 'Route',
+      departure: 'Departure',
+      driver: 'Driver',
+      yes: 'Yes',
+      no: 'No',
+      edit: 'Edit',
+      delete: 'Delete',
+      noBuses: 'No buses found.',
+      deleteConfirm: 'Delete this bus?',
+      failedToLoad: 'Failed to load data',
+      failedToDelete: 'Failed to delete bus',
+      failedToSave: 'Failed to save bus'
+    },
+    hi: {
+      addBus: 'बस जोड़ें',
+      editBus: 'बस संपादित करें',
+      busNumber: 'बस नंबर',
+      selectRoute: 'मार्ग चुनें',
+      selectDriver: 'ड्राइवर चुनें',
+      availableToday: 'आज उपलब्ध',
+      save: 'सेव करें',
+      update: 'अपडेट करें',
+      cancel: 'रद्द करें',
+      buses: 'बसें',
+      loading: 'लोड हो रहा है…',
+      route: 'मार्ग',
+      departure: 'प्रस्थान',
+      driver: 'ड्राइवर',
+      yes: 'हाँ',
+      no: 'नहीं',
+      edit: 'संपादित करें',
+      delete: 'हटाएं',
+      noBuses: 'कोई बस नहीं मिली।',
+      deleteConfirm: 'इस बस को हटाना है?',
+      failedToLoad: 'डेटा लोड करने में विफल',
+      failedToDelete: 'बस हटाने में विफल',
+      failedToSave: 'बस सेव करने में विफल'
+    }
+  };
+
+  const t = translations[language];
 
   const emptyForm = {
     busNumber: '',
@@ -32,10 +87,71 @@ const CoordinatorBusManagement = () => {
       if (r.data.success) setRoutes(r.data.data);
       if (d.data.success) setDrivers(d.data.data);
     } catch (err) {
-      setError('Failed to load data');
+      setError(t.failedToLoad);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Helper function to translate route names
+  const translateRouteName = (routeName) => {
+    if (language === 'hi') {
+      const routeTranslations = {
+        'Route A - City Center': 'मार्ग अ - शहर केंद्र',
+        'Route B - Industrial Area': 'मार्ग ब - औद्योगिक क्षेत्र',
+        'Route C - Residential': 'मार्ग स - आवासीय',
+        'Route D - Highway': 'मार्ग द - राजमार्ग',
+        'Route E - University': 'मार्ग ई - विश्वविद्यालय',
+        'Route F - Hospital': 'मार्ग उ - अस्पताल',
+        'City Center': 'शहर केंद्र',
+        'Industrial Area': 'औद्योगिक क्षेत्र',
+        'Residential': 'आवासीय',
+        'Highway': 'राजमार्ग',
+        'University': 'विश्वविद्यालय',
+        'Hospital': 'अस्पताल',
+        'Purana Kesla': 'पुराना केसला',
+        'Tekari Bus Stand': 'टेकारी बस स्टैंड',
+        'Main Campus': 'मुख्य कैंपस',
+        'New Campus': 'नया कैंपस',
+        'Medical College': 'मेडिकल कॉलेज',
+        'Engineering College': 'इंजीनियरिंग कॉलेज',
+        'Arts College': 'कला महाविद्यालय',
+        'Commerce College': 'वाणिज्य महाविद्यालय',
+        'Science College': 'विज्ञान महाविद्यालय',
+        'Law College': 'विधि महाविद्यालय',
+        'Management College': 'प्रबंधन महाविद्यालय',
+        'Pharmacy College': 'फार्मेसी कॉलेज',
+        'Nursing College': 'नर्सिंग कॉलेज',
+        'Teacher Training College': 'शिक्षक प्रशिक्षण महाविद्यालय'
+      };
+      return routeTranslations[routeName] || routeName;
+    }
+    return routeName;
+  };
+
+  // Helper function to translate driver names
+  const translateDriverName = (driverName) => {
+    if (language === 'hi') {
+      const driverTranslations = {
+        'Ramesh Kumar': 'रमेश कुमार',
+        'Suresh Yadav': 'सुरेश यादव',
+        'Mahesh Singh': 'महेश सिंह',
+        'Dinesh Patel': 'दिनेश पटेल',
+        'Ram Singh': 'राम सिंह',
+        'Mohan Lal': 'मोहन लाल',
+        'Ravi Sharma': 'रवि शर्मा',
+        'Amit Verma': 'अमित वर्मा',
+        'Vijay Gupta': 'विजय गुप्ता',
+        'Sanjay Tiwari': 'संजय तिवारी',
+        'Rajesh Pandey': 'राजेश पांडे',
+        'Ashok Mishra': 'अशोक मिश्रा',
+        'Deepak Joshi': 'दीपक जोशी',
+        'Prakash Dubey': 'प्रकाश दुबे',
+        'Santosh Rai': 'संतोष राय'
+      };
+      return driverTranslations[driverName] || driverName;
+    }
+    return driverName;
   };
 
   useEffect(() => {
@@ -54,12 +170,12 @@ const CoordinatorBusManagement = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete this bus?')) return;
+    if (!window.confirm(t.deleteConfirm)) return;
     try {
       await busAPI.deleteBus(id);
       loadData();
     } catch (err) {
-      setError('Failed to delete bus');
+      setError(t.failedToDelete);
     }
   };
 
@@ -76,7 +192,7 @@ const CoordinatorBusManagement = () => {
       setForm(emptyForm);
       loadData();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to save bus');
+      setError(err.response?.data?.message || t.failedToSave);
     }
   };
 
@@ -84,13 +200,13 @@ const CoordinatorBusManagement = () => {
     <div className="grid md:grid-cols-2 gap-6">
       <div className="bg-white p-4 rounded shadow">
         <h2 className="text-xl font-bold mb-4">
-          {editingBus ? 'Edit Bus' : 'Add Bus'}
+          {editingBus ? t.editBus : t.addBus}
         </h2>
         {error && <p className="text-red-600 text-sm mb-2">{error}</p>}
         <form onSubmit={handleSubmit} className="space-y-3">
           <input
             className="w-full border rounded px-3 py-2"
-            placeholder="Bus Number"
+            placeholder={t.busNumber}
             value={form.busNumber}
             onChange={(e) => setForm({ ...form, busNumber: e.target.value })}
             required
@@ -101,10 +217,10 @@ const CoordinatorBusManagement = () => {
             onChange={(e) => setForm({ ...form, routeId: e.target.value })}
             required
           >
-            <option value="">Select Route</option>
+            <option value="">{t.selectRoute}</option>
             {routes.map((r) => (
               <option key={r._id} value={r._id}>
-                {r.name}
+                {translateRouteName(r.name)}
               </option>
             ))}
           </select>
@@ -114,10 +230,10 @@ const CoordinatorBusManagement = () => {
             onChange={(e) => setForm({ ...form, driverId: e.target.value })}
             required
           >
-            <option value="">Select Driver</option>
+            <option value="">{t.selectDriver}</option>
             {drivers.map((d) => (
               <option key={d._id} value={d._id}>
-                {d.name} ({d.phone})
+                {translateDriverName(d.name)} ({d.phone})
               </option>
             ))}
           </select>
@@ -138,14 +254,14 @@ const CoordinatorBusManagement = () => {
                 setForm({ ...form, isAvailableToday: e.target.checked })
               }
             />
-            <span>Available today</span>
+            <span>{t.availableToday}</span>
           </label>
           <div className="flex gap-2">
             <button
               type="submit"
               className="bg-blue-600 text-white px-4 py-2 rounded"
             >
-              {editingBus ? 'Update' : 'Save'}
+              {editingBus ? t.update : t.save}
             </button>
             {editingBus && (
               <button
@@ -156,7 +272,7 @@ const CoordinatorBusManagement = () => {
                 }}
                 className="border px-4 py-2 rounded"
               >
-                Cancel
+                {t.cancel}
               </button>
             )}
           </div>
@@ -165,7 +281,7 @@ const CoordinatorBusManagement = () => {
 
       <div className="bg-white p-4 rounded shadow">
         <h2 className="text-xl font-bold mb-4">
-          Buses {loading && <span className="text-sm text-gray-500">Loading…</span>}
+          {t.buses} {loading && <span className="text-sm text-gray-500">{t.loading}</span>}
         </h2>
         <div className="space-y-3 max-h-[500px] overflow-y-auto">
           {buses.map((bus) => (
@@ -176,15 +292,15 @@ const CoordinatorBusManagement = () => {
               <div>
                 <p className="font-semibold">#{bus.busNumber}</p>
                 <p className="text-sm text-gray-600">
-                  Route: {bus.route?.name} | Departure: {bus.departureTime}
+                  {t.route}: {translateRouteName(bus.route?.name)} | {t.departure}: {bus.departureTime}
                 </p>
                 <p className="text-sm text-gray-600">
-                  Driver: {bus.driver?.name} ({bus.driver?.phone})
+                  {t.driver}: {translateDriverName(bus.driver?.name)} ({bus.driver?.phone})
                 </p>
                 <p className="text-xs mt-1">
-                  Available today:{' '}
+                  {t.availableToday}:{' '}
                   <span className={bus.isAvailableToday ? 'text-green-600' : 'text-red-600'}>
-                    {bus.isAvailableToday ? 'Yes' : 'No'}
+                    {bus.isAvailableToday ? t.yes : t.no}
                   </span>
                 </p>
               </div>
@@ -193,19 +309,19 @@ const CoordinatorBusManagement = () => {
                   className="text-blue-600 text-sm"
                   onClick={() => handleEdit(bus)}
                 >
-                  Edit
+                  {t.edit}
                 </button>
                 <button
                   className="text-red-600 text-sm"
                   onClick={() => handleDelete(bus._id)}
                 >
-                  Delete
+                  {t.delete}
                 </button>
               </div>
             </div>
           ))}
           {!loading && buses.length === 0 && (
-            <p className="text-gray-500 text-sm">No buses found.</p>
+            <p className="text-gray-500 text-sm">{t.noBuses}</p>
           )}
         </div>
       </div>

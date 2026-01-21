@@ -46,85 +46,129 @@ const SignUpPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="max-w-md w-full bg-white p-8 rounded-lg shadow">
-        <h2 className="text-2xl font-bold mb-6 text-center">Sign Up</h2>
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100 flex items-center justify-center px-4 relative overflow-hidden">
+      {/* Background blur effects */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-orange-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-amber-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse delay-1000"></div>
+      </div>
 
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
-          </div>
-        )}
+      <div className="relative z-10 max-w-md w-full">
+        {/* Back Button */}
+        <button
+          onClick={() => navigate('/')}
+          className="flex items-center gap-2 text-gray-600 mb-6 hover:text-gray-800 transition-colors"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.42-1.41L7.83 13H20v-2z"/>
+          </svg>
+          BACK
+        </button>
 
-        {step === 1 ? (
-          <form onSubmit={handleRequestOTP} className="space-y-4">
-            <input
-              type="text"
-              placeholder="Full Name"
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
-              className="w-full border rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-            <input
-              type="tel"
-              placeholder="Phone Number"
-              value={formData.phone}
-              onChange={(e) =>
-                setFormData({ ...formData, phone: e.target.value })
-              }
-              className="w-full border rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-blue-600 text-white py-2 rounded font-semibold hover:bg-blue-700 disabled:bg-gray-400"
-            >
-              {loading ? 'Sending OTP...' : 'Send OTP'}
-            </button>
-          </form>
-        ) : (
-          <form onSubmit={handleSignUp} className="space-y-4">
-            <div className="bg-blue-50 p-3 rounded text-center">
-              <p className="text-sm text-gray-600">
-                OTP sent to {formData.phone}
-              </p>
+        {/* SignUp Card */}
+        <div className="card p-8">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">Sign Up</h2>
+          <p className="text-gray-600 mb-8">Create your student account to track buses.</p>
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6">
+              {error}
             </div>
-            <input
-              type="text"
-              placeholder="Enter 6-digit OTP"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value)}
-              maxLength="6"
-              className="w-full border rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-2xl tracking-widest"
-              required
-            />
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-green-600 text-white py-2 rounded font-semibold hover:bg-green-700 disabled:bg-gray-400"
-            >
-              {loading ? 'Creating Account...' : 'Sign Up'}
-            </button>
-            <button
-              type="button"
-              onClick={() => setStep(1)}
-              className="w-full text-blue-600 py-2 hover:underline"
-            >
-              Back
-            </button>
-          </form>
-        )}
+          )}
 
-        <p className="text-center mt-6 text-gray-600">
-          Already have an account?{' '}
-          <a href="/login" className="text-blue-600 hover:underline">
-            Login
-          </a>
-        </p>
+          {step === 1 ? (
+            <form onSubmit={handleRequestOTP} className="space-y-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  FULL NAME
+                </label>
+                <input
+                  type="text"
+                  placeholder="Exactly as registered"
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                  className="input-field"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  PHONE NUMBER
+                </label>
+                <input
+                  type="tel"
+                  placeholder="10-digit mobile"
+                  value={formData.phone}
+                  onChange={(e) =>
+                    setFormData({ ...formData, phone: e.target.value })
+                  }
+                  className="input-field"
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn-primary w-full text-lg"
+              >
+                {loading ? 'Sending OTP...' : 'Send OTP'}
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleSignUp} className="space-y-6">
+              <div className="bg-blue-50 p-4 rounded-xl text-center border border-blue-100">
+                <p className="text-sm text-gray-600">
+                  OTP sent to {formData.phone}
+                </p>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  ENTER OTP
+                </label>
+                <input
+                  type="text"
+                  placeholder="••••••"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  maxLength="6"
+                  className="input-field text-center text-2xl tracking-widest"
+                  required
+                />
+              </div>
+              
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn-primary w-full text-lg"
+              >
+                {loading ? 'Creating Account...' : 'Create Account'}
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                className="w-full text-gray-600 py-2 hover:text-gray-800 transition-colors"
+              >
+                Back to details
+              </button>
+            </form>
+          )}
+
+          <p className="text-center mt-8 text-gray-600">
+            Already have an account?{' '}
+            <button 
+              onClick={() => navigate('/login')}
+              className="text-primary-600 hover:text-primary-700 font-medium"
+            >
+              Login
+            </button>
+          </p>
+        </div>
       </div>
     </div>
   );
