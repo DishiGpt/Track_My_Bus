@@ -1,361 +1,328 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { driverAPI } from '../utils/api'; // Used File 2's API for real data
-import locationService from '../utils/locationService'; // functionality from File 1 & 2
+import { driverAPI, busAPI } from '../utils/api';
+import { Geolocation } from '@capacitor/geolocation';
 
 const DriverPage = () => {
-  const { user, logout } = useAuth();
-  
-  // State Management
-  const [bus, setBus] = useState(null);
-  const [language, setLanguage] = useState('en'); // Defaulting to English, adjustable via UI
-  const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('bus');
-  
-  // GPS Tracking State
-  const [gpsEnabled, setGpsEnabled] = useState(false);
-  const [currentLocation, setCurrentLocation] = useState(null);
-  const [locationError, setLocationError] = useState(null);
-  const [lastUpdateTime, setLastUpdateTime] = useState(null);
+    const { user, logout } = useAuth();
+    const [activeTab, setActiveTab] = useState('status');
+    const [assignedBus, setAssignedBus] = useState(null);
+    const [isSharing, setIsSharing] = useState(false);
+    const [currentLocation, setCurrentLocation] = useState(null);
+    const [lastUpdate, setLastUpdate] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [locationError, setLocationError] = useState('');
 
-  // Translations (Merged for completeness)
-  const translations = {
-    en: {
-      title: 'Driver Dashboard',
-      busInfo: 'Bus Information',
-      noBus: 'No bus assigned',
-      busNumber: 'Bus Number',
-      route: 'Route',
-      departure: 'Departure Time',
-      capacity: 'Capacity',
-      routeDetails: 'Route Details',
-      waypoints: 'Stops',
-      gpsTitle: 'GPS Location Sharing',
-      gpsOn: 'GPS is ON - Location shared every 10 seconds',
-      gpsOff: 'GPS is OFF - Students cannot track your bus',
-      start: 'START SHARING',
-      stop: 'STOP SHARING',
-      language: 'Language',
-      logout: 'Logout',
-      currentLocation: 'Current Location',
-      lastUpdate: 'Last Update',
-      accuracy: 'Accuracy',
-      startingPoint: 'Starting Point',
-      sharingLocation: 'Sharing location...',
-      gettingLocation: 'Getting location...'
-    },
-    hi: {
-      title: 'ड्राइवर डैशबोर्ड',
-      busInfo: 'बस की जानकारी',
-      noBus: 'कोई बस असाइन नहीं',
-      busNumber: 'बस नंबर',
-      route: 'मार्ग',
-      departure: 'प्रस्थान का समय',
-      capacity: 'क्षमता',
-      routeDetails: 'मार्ग विवरण',
-      waypoints: 'स्टॉप',
-      gpsTitle: 'GPS स्थान साझाकरण',
-      gpsOn: 'GPS चालू है - हर 10 सेकंड में स्थान साझा',
-      gpsOff: 'GPS बंद है - छात्र आपकी बस को ट्रैक नहीं कर सकते',
-      start: 'शुरू करें',
-      stop: 'बंद करें',
-      language: 'भाषा',
-      logout: 'लॉगआउट',
-      currentLocation: 'वर्तमान स्थान',
-      lastUpdate: 'अंतिम अपडेट',
-      accuracy: 'सटीकता',
-      startingPoint: 'शुरुआती बिंदु',
-      sharingLocation: 'स्थान साझा कर रहा है...',
-      gettingLocation: 'स्थान प्राप्त कर रहा है...'
-    },
-  };
+    const tabs = [
+        { id: 'status', label: 'Status', icon: '🚌' },
+        { id: 'route', label: 'Route', icon: '🗺️' },
+    ];
 
-  const t = translations[language];
+    useEffect(() => {
+        fetchAssignedBus();
+    }, []);
 
-  const tabs = [
-    { id: 'bus', label: language === 'en' ? 'My Bus' : 'मेरी बस', icon: '🚌' },
-    { id: 'route', label: language === 'en' ? 'Route' : 'मार्ग', icon: '🛤️' },
-    { id: 'gps', label: 'GPS', icon: '📍' },
-    { id: 'settings', label: language === 'en' ? 'Settings' : 'सेटिंग्स', icon: '⚙️' },
-  ];
+    useEffect(() => {
+        let watchId = null;
+        let intervalId = null;
 
-  // --- Effects ---
+        if (isSharing && assignedBus) {
+            const startTracking = async () => {
+                try {
+                    // Request permission first
+                    const permission = await Geolocation.requestPermissions();
+                    if (permission.location === 'denied') {
+                        setLocationError('Location permission denied');
+                        setIsSharing(false);
+                        return;
+                    }
 
-  useEffect(() => {
-    fetchAssignedBus();
-  }, []); // Fetch on mount
+                    // Watch position
+                    watchId = await Geolocation.watchPosition(
+                        { enableHighAccuracy: true, timeout: 10000 },
+                        (position, err) => {
+                            if (err) {
+                                console.error('Location error:', err);
+                                setLocationError('Unable to get location');
+                                return;
+                            }
+                            if (position) {
+                                setCurrentLocation({
+                                    lat: position.coords.latitude,
+                                    lng: position.coords.longitude,
+                                });
+                                setLocationError('');
+                            }
+                        }
+                    );
 
-  // Handle GPS tracking toggles
-  useEffect(() => {
-    if (gpsEnabled) {
-      startTracking();
-    } else {
-      stopTracking();
-    }
+                    // Send location to server every 10 seconds
+                    intervalId = setInterval(async () => {
+                        if (currentLocation) {
+                            try {
+                                await busAPI.updateLocation(currentLocation.lat, currentLocation.lng);
+                                setLastUpdate(new Date());
+                            } catch (error) {
+                                console.error('Failed to update location:', error);
+                            }
+                        }
+                    }, 10000);
+                } catch (error) {
+                    console.error('Tracking error:', error);
+                    setLocationError('Failed to start tracking');
+                    setIsSharing(false);
+                }
+            };
 
-    return () => {
-      locationService.stopTracking();
+            startTracking();
+        }
+
+        return () => {
+            if (watchId !== null) {
+                Geolocation.clearWatch({ id: watchId });
+            }
+            if (intervalId) {
+                clearInterval(intervalId);
+            }
+        };
+    }, [isSharing, assignedBus]);
+
+    const fetchAssignedBus = async () => {
+        setLoading(true);
+        try {
+            const response = await driverAPI.getAssignedBus();
+            if (response.data.success) {
+                setAssignedBus(response.data.data);
+            }
+        } catch (error) {
+            console.error('Error fetching assigned bus:', error);
+        } finally {
+            setLoading(false);
+        }
     };
-  }, [gpsEnabled]);
 
-  // --- Logic ---
+    const toggleLocationSharing = () => {
+        setIsSharing(!isSharing);
+        if (!isSharing) {
+            setLocationError('');
+        }
+    };
 
-  // 1. Data Fetching (Using API from File 2)
-  const fetchAssignedBus = async () => {
-    setLoading(true);
-    try {
-      const response = await driverAPI.getAssignedBus();
-      if (response.data.success) {
-        setBus(response.data.data);
-      }
-    } catch (error) {
-      console.error('Error fetching bus:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 2. GPS Logic (Shared logic)
-  const startTracking = async () => {
-    setLocationError(null);
-    await locationService.startTracking(
-      (location) => {
-        setCurrentLocation(location);
-        setLastUpdateTime(new Date());
-      },
-      (error) => {
-        setLocationError(error);
-        console.error('Location error:', error);
-      }
-    );
-  };
-
-  const stopTracking = async () => {
-    await locationService.stopTracking();
-    setCurrentLocation(null);
-    setLastUpdateTime(null);
-  };
-
-  const handleGpsToggle = async () => {
-    if (!gpsEnabled) {
-      const hasPermission = await locationService.requestPermissions();
-      if (!hasPermission) {
-        setLocationError('Location permission denied. Please enable in settings.');
-        return;
-      }
-    }
-    setGpsEnabled(!gpsEnabled);
-  };
-
-  // --- Render ---
-
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Navbar - Using File 2 style (includes Language Toggle) */}
-      <nav className="bg-green-600 text-white p-4">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <h1 className="text-2xl font-bold">🚗 {t.title}</h1>
-          <div className="flex items-center gap-4">
-            {/* GPS Status Indicator */}
-            {gpsEnabled && (
-              <span className="flex items-center gap-1 text-sm bg-green-700 px-3 py-1 rounded-full animate-pulse">
-                <span className="w-2 h-2 bg-green-300 rounded-full"></span>
-                GPS Active
-              </span>
-            )}
-            
-            {/* Navbar Language Toggle */}
-            <button
-              onClick={() => setLanguage(language === 'en' ? 'hi' : 'en')}
-              className="bg-green-700 px-4 py-2 rounded hover:bg-green-800 transition"
-            >
-              {language === 'en' ? 'हिंदी' : 'English'}
-            </button>
-            
-            <span className="text-sm bg-green-700 px-3 py-1 rounded-full hidden sm:inline-block">
-              {user?.name} ({language === 'en' ? 'Driver' : 'ड्राइवर'})
-            </span>
-            <button
-              onClick={logout}
-              className="bg-red-500 px-4 py-2 rounded hover:bg-red-600 transition"
-            >
-              {t.logout}
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      <div className="max-w-7xl mx-auto p-4">
-        {/* Tab Navigation */}
-        <div className="flex flex-wrap gap-2 mb-6 bg-white p-3 rounded-lg shadow">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2 rounded-lg flex items-center gap-2 transition ${activeTab === tab.id
-                  ? 'bg-green-600 text-white shadow-lg'
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                }`}
-            >
-              <span>{tab.icon}</span>
-              <span>{tab.label}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Content Area */}
-        {loading ? (
-          <p className="text-center text-gray-600 mt-8">Loading...</p>
-        ) : !bus ? (
-          <div className="bg-white rounded-lg shadow p-8 text-center">
-            <p className="text-xl text-gray-600">{t.noBus}</p>
-          </div>
-        ) : (
-          <div className="bg-white rounded-lg shadow p-6">
-            
-            {/* BUS INFO TAB */}
-            {activeTab === 'bus' && (
-              <div>
-                <h2 className="text-2xl font-bold mb-4">{t.busInfo}</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <p className="text-gray-600">{t.busNumber}</p>
-                    <p className="text-2xl font-bold">{bus.busNumber}</p>
-                  </div>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <p className="text-gray-600">{t.route}</p>
-                    <p className="text-2xl font-bold">{bus.route?.name}</p>
-                  </div>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <p className="text-gray-600">{t.departure}</p>
-                    <p className="text-2xl font-bold">{bus.departureTime}</p>
-                  </div>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <p className="text-gray-600">{t.capacity}</p>
-                    <p className="text-2xl font-bold">{bus.capacity} {language === 'hi' ? 'सीटें' : 'seats'}</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* ROUTE TAB */}
-            {activeTab === 'route' && (
-              <div>
-                <h2 className="text-2xl font-bold mb-4">{t.routeDetails}</h2>
-                <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                  <p className="text-gray-600 mb-2">{t.startingPoint}:</p>
-                  <p className="text-xl font-bold mb-4">{bus.route?.startingPoint || 'N/A'}</p>
-                  <p className="text-gray-600 mb-2">{t.routeDetails}:</p>
-                  <p className="text-lg">{bus.route?.routeDetails || (language === 'hi' ? 'कोई विवरण उपलब्ध नहीं' : 'No details available')}</p>
-                </div>
-                {bus.route?.waypoints?.length > 0 && (
-                  <>
-                    <h3 className="text-xl font-bold mb-3">{t.waypoints}</h3>
-                    <div className="space-y-2">
-                      {bus.route.waypoints.map((wp, index) => (
-                        <div key={index} className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
-                          <span className="bg-green-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">
-                            {wp.order || index + 1}
-                          </span>
-                          <span className="font-medium">{wp.name}</span>
+    return (
+        <div className="min-h-screen bg-gray-100 flex flex-col">
+            {/* Mobile App Bar */}
+            <header className="bg-green-600 text-white px-4 py-3 shadow-lg sticky top-0 z-50">
+                <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-3">
+                        <span className="text-2xl">🚌</span>
+                        <div>
+                            <h1 className="text-lg font-bold leading-tight">Driver Dashboard</h1>
+                            <p className="text-xs text-green-200">Welcome, {user?.name}</p>
                         </div>
-                      ))}
                     </div>
-                  </>
-                )}
-              </div>
-            )}
-
-            {/* GPS TAB - Using detailed stats from File 1 */}
-            {activeTab === 'gps' && (
-              <div className="text-center">
-                <h2 className="text-2xl font-bold mb-6">{t.gpsTitle}</h2>
-
-                {locationError && (
-                  <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                    {locationError}
-                  </div>
-                )}
-
-                <div className={`p-6 rounded-lg mb-6 transition-colors ${gpsEnabled ? 'bg-green-100 border-2 border-green-500' : 'bg-gray-100'}`}>
-                  <p className="text-lg mb-4">
-                    {gpsEnabled ? t.gpsOn : t.gpsOff}
-                  </p>
-                  <button
-                    onClick={handleGpsToggle}
-                    className={`px-8 py-4 rounded-lg text-white font-bold text-xl transition ${gpsEnabled
-                        ? 'bg-red-600 hover:bg-red-700'
-                        : 'bg-green-600 hover:bg-green-700'
-                      }`}
-                  >
-                    {gpsEnabled ? t.stop : t.start}
-                  </button>
+                    <button
+                        onClick={logout}
+                        className="bg-white/20 hover:bg-white/30 active:bg-white/40 px-4 py-2 rounded-full text-sm font-medium transition-all touch-manipulation"
+                    >
+                        Logout
+                    </button>
                 </div>
+            </header>
 
-                {gpsEnabled && currentLocation && (
-                  <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                    <div className="flex items-center justify-center gap-2 mb-3">
-                      <span className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
-                      <span className="text-green-700 font-semibold">Live Tracking Active</span>
+            {/* Main Content */}
+            <main className="flex-1 overflow-y-auto pb-20">
+                {/* Status Tab */}
+                {activeTab === 'status' && (
+                    <div className="p-4">
+                        {loading ? (
+                            <div className="flex flex-col items-center justify-center py-16">
+                                <div className="w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+                                <p className="text-gray-600">Loading your assignment...</p>
+                            </div>
+                        ) : !assignedBus ? (
+                            <div className="flex flex-col items-center justify-center py-16 text-center">
+                                <span className="text-5xl mb-4">🚌</span>
+                                <p className="text-gray-600 font-medium">No bus assigned</p>
+                                <p className="text-gray-400 text-sm mt-1">Contact admin for assignment</p>
+                            </div>
+                        ) : (
+                            <>
+                                {/* Assigned Bus Card */}
+                                <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-4">
+                                    <div className="flex items-center gap-4 mb-4">
+                                        <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center">
+                                            <span className="text-3xl">🚌</span>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-gray-400 uppercase font-medium">Your Bus</p>
+                                            <h2 className="text-2xl font-bold text-gray-900">{assignedBus.busNumber}</h2>
+                                            <p className="text-gray-500">{assignedBus.route?.name || 'No route'}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="bg-gray-50 p-3 rounded-xl">
+                                            <p className="text-xs text-gray-400">Departure</p>
+                                            <p className="font-medium">⏰ {assignedBus.departureTime}</p>
+                                        </div>
+                                        <div className="bg-gray-50 p-3 rounded-xl">
+                                            <p className="text-xs text-gray-400">Capacity</p>
+                                            <p className="font-medium">🪑 {assignedBus.capacity} seats</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Location Sharing Control */}
+                                <div className={`rounded-2xl p-5 shadow-sm border mb-4 transition-colors ${isSharing ? 'bg-green-50 border-green-200' : 'bg-white border-gray-100'
+                                    }`}>
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div>
+                                            <h3 className="font-bold text-lg text-gray-900">Live Location</h3>
+                                            <p className="text-sm text-gray-500">
+                                                {isSharing ? 'Sharing location with students' : 'Location sharing is off'}
+                                            </p>
+                                        </div>
+                                        <div className={`w-4 h-4 rounded-full ${isSharing ? 'bg-green-500 animate-pulse' : 'bg-gray-300'}`}></div>
+                                    </div>
+
+                                    {locationError && (
+                                        <div className="bg-red-50 text-red-700 p-3 rounded-xl mb-4 text-sm">
+                                            ⚠️ {locationError}
+                                        </div>
+                                    )}
+
+                                    {isSharing && currentLocation && (
+                                        <div className="bg-white rounded-xl p-3 mb-4 border border-green-200">
+                                            <div className="flex justify-between items-center">
+                                                <div>
+                                                    <p className="text-xs text-gray-400">Current Coordinates</p>
+                                                    <p className="font-mono text-sm">
+                                                        {currentLocation.lat.toFixed(6)}, {currentLocation.lng.toFixed(6)}
+                                                    </p>
+                                                </div>
+                                                {lastUpdate && (
+                                                    <div className="text-right">
+                                                        <p className="text-xs text-gray-400">Last sent</p>
+                                                        <p className="text-xs text-green-600">{lastUpdate.toLocaleTimeString()}</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <button
+                                        onClick={toggleLocationSharing}
+                                        className={`w-full py-4 rounded-2xl font-bold text-lg transition-all touch-manipulation ${isSharing
+                                                ? 'bg-red-500 text-white active:bg-red-600'
+                                                : 'bg-green-600 text-white active:bg-green-700'
+                                            }`}
+                                    >
+                                        {isSharing ? '⏹ Stop Sharing' : '▶ Start Sharing Location'}
+                                    </button>
+                                </div>
+
+                                {/* Quick Stats */}
+                                <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+                                    <h3 className="font-bold text-lg text-gray-900 mb-4">Today's Info</h3>
+                                    <div className="space-y-3">
+                                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                                            <span className="text-xl">📍</span>
+                                            <div>
+                                                <p className="text-xs text-gray-400">Route</p>
+                                                <p className="font-medium">{assignedBus.route?.name || 'Not assigned'}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                                            <span className="text-xl">🕐</span>
+                                            <div>
+                                                <p className="text-xs text-gray-400">Status</p>
+                                                <p className={`font-medium ${isSharing ? 'text-green-600' : 'text-gray-500'}`}>
+                                                    {isSharing ? '🟢 On Route' : '⚪ Not Started'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </>
+                        )}
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                      <div>
-                        <p className="text-gray-600">{t.currentLocation}</p>
-                        <p className="font-mono font-medium">
-                          {currentLocation.latitude?.toFixed(6)}, {currentLocation.longitude?.toFixed(6)}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-gray-600">{t.accuracy}</p>
-                        <p className="font-medium">±{currentLocation.accuracy?.toFixed(0)}m</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-600">{t.lastUpdate}</p>
-                        <p className="font-medium">
-                          {lastUpdateTime?.toLocaleTimeString()}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
                 )}
 
-                {gpsEnabled && !currentLocation && (
-                  <div className="animate-pulse text-green-600 flex items-center justify-center gap-2">
-                    <span className="w-2 h-2 bg-green-600 rounded-full"></span>
-                    {t.gettingLocation}
-                  </div>
-                )}
-              </div>
-            )}
+                {/* Route Tab */}
+                {activeTab === 'route' && (
+                    <div className="p-4">
+                        {!assignedBus?.route ? (
+                            <div className="flex flex-col items-center justify-center py-16 text-center">
+                                <span className="text-5xl mb-4">🗺️</span>
+                                <p className="text-gray-600 font-medium">No route assigned</p>
+                                <p className="text-gray-400 text-sm mt-1">Route details will appear here</p>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-4">
+                                    <h2 className="text-xl font-bold text-gray-900 mb-2">{assignedBus.route.name}</h2>
+                                    <p className="text-gray-500 mb-4">{assignedBus.route.description || 'No description'}</p>
 
-            {/* SETTINGS TAB */}
-            {activeTab === 'settings' && (
-              <div className="max-w-md">
-                <h2 className="text-2xl font-bold mb-4">{language === 'hi' ? 'सेटिंग्स' : 'Settings'}</h2>
-                <div className="space-y-4">
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <p className="text-gray-600 mb-2">{language === 'hi' ? 'भाषा' : 'Language'}</p>
-                    <p className="font-medium">{language === 'hi' ? 'हिंदी' : 'English'}</p>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {language === 'hi' 
-                        ? 'भाषा बदलने के लिए ऊपर बटन का उपयोग करें' 
-                        : 'Use the button in the header to change language'
-                      }
-                    </p>
-                  </div>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <p className="text-gray-600 mb-2">{language === 'hi' ? 'ड्राइवर जानकारी' : 'Driver Information'}</p>
-                    <p className="font-medium">{user?.name}</p>
-                    <p className="text-sm text-gray-500">{language === 'hi' ? 'ड्राइवर' : 'Driver'}</p>
-                  </div>
+                                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                                        <span>📍</span>
+                                        <span>{assignedBus.route.stops?.length || 0} stops on this route</span>
+                                    </div>
+                                </div>
+
+                                {assignedBus.route.stops?.length > 0 && (
+                                    <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+                                        <h3 className="font-bold text-lg text-gray-900 mb-4">Route Stops</h3>
+                                        <div className="space-y-3">
+                                            {assignedBus.route.stops.map((stop, index) => (
+                                                <div key={index} className="flex items-center gap-3">
+                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${index === 0 ? 'bg-green-100 text-green-700' :
+                                                            index === assignedBus.route.stops.length - 1 ? 'bg-red-100 text-red-700' :
+                                                                'bg-blue-100 text-blue-700'
+                                                        }`}>
+                                                        {index + 1}
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <p className="font-medium text-gray-900">{stop.name}</p>
+                                                        {stop.time && <p className="text-xs text-gray-400">{stop.time}</p>}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </div>
+                )}
+            </main>
+
+            {/* Bottom Navigation */}
+            <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
+                <div className="flex justify-around items-center h-16 max-w-lg mx-auto">
+                    {tabs.map((tab) => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={`flex flex-col items-center justify-center flex-1 h-full py-2 transition-all touch-manipulation ${activeTab === tab.id
+                                    ? 'text-green-600'
+                                    : 'text-gray-400 hover:text-gray-600'
+                                }`}
+                        >
+                            <span className={`text-2xl mb-1 transition-transform ${activeTab === tab.id ? 'scale-110' : ''}`}>
+                                {tab.icon}
+                            </span>
+                            <span className={`text-xs font-medium ${activeTab === tab.id ? 'font-bold' : ''}`}>
+                                {tab.label}
+                            </span>
+                            {activeTab === tab.id && (
+                                <div className="absolute bottom-0 w-12 h-1 bg-green-600 rounded-t-full"></div>
+                            )}
+                        </button>
+                    ))}
                 </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+            </nav>
+        </div>
+    );
 };
 
 export default DriverPage;

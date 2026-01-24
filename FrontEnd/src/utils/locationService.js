@@ -24,7 +24,7 @@ class LocationService {
                     resolve(false);
                     return;
                 }
-                
+
                 navigator.geolocation.getCurrentPosition(
                     () => resolve(true),
                     () => resolve(false),
@@ -80,8 +80,8 @@ class LocationService {
                         }
                         reject(new Error(errorMessage));
                     },
-                    { 
-                        enableHighAccuracy: true, 
+                    {
+                        enableHighAccuracy: true,
                         timeout: 10000,
                         maximumAge: 60000 // Cache for 1 minute
                     }
@@ -158,13 +158,28 @@ class LocationService {
     // Send location to backend
     async sendLocationToBackend(location) {
         try {
-            // Mock API call for now - replace with actual API when backend is ready
-            console.log('Sending location to backend:', location.latitude, location.longitude);
-            
-            // Uncomment when backend API is ready:
-            // await busAPI.updateLocation(location.latitude, location.longitude);
-            
-            return true;
+            const token = localStorage.getItem('token');
+            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+            const response = await fetch(`${apiUrl}/bus/location`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    latitude: location.latitude,
+                    longitude: location.longitude,
+                }),
+            });
+
+            if (response.ok) {
+                console.log('Location sent to backend:', location.latitude, location.longitude);
+                return true;
+            } else {
+                console.error('Failed to send location:', response.status);
+                return false;
+            }
         } catch (error) {
             console.error('Error sending location to backend:', error);
             return false;

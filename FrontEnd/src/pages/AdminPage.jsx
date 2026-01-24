@@ -20,7 +20,7 @@ const AdminPage = () => {
     { id: 'students', label: 'STUDENTS' },
     { id: 'drivers', label: 'DRIVERS' },
     { id: 'routes', label: 'ROUTES' },
-    { id: 'broadcast', label: 'BROADCAST' },
+    // { id: 'broadcast', label: 'BROADCAST' },
   ];
 
   return (
@@ -72,7 +72,7 @@ const AdminPage = () => {
         {tab === 'coordinators' && <CoordinatorManagement />}
         {tab === 'buses' && <BusManagement />}
         {tab === 'routes' && <RouteManagement />}
-        {tab === 'broadcast' && <BroadcastNotification />}
+        {/*tab === 'broadcast' && <BroadcastNotification />*/}
       </div>
     </div>
   );

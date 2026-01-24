@@ -67,7 +67,7 @@ const LoginPage = () => {
           className="flex items-center gap-2 text-gray-600 mb-6 hover:text-gray-800 transition-colors"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.42-1.41L7.83 13H20v-2z"/>
+            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.42-1.41L7.83 13H20v-2z" />
           </svg>
           BACK
         </button>
@@ -114,7 +114,7 @@ const LoginPage = () => {
                   OTP sent to {phone}
                 </p>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   ENTER OTP
@@ -129,7 +129,7 @@ const LoginPage = () => {
                   required
                 />
               </div>
-              
+
               <button
                 type="submit"
                 disabled={loading}
@@ -137,7 +137,7 @@ const LoginPage = () => {
               >
                 {loading ? 'Logging in...' : 'Login Now'}
               </button>
-              
+
               <button
                 type="button"
                 onClick={() => setStep(1)}
@@ -150,7 +150,7 @@ const LoginPage = () => {
 
           <p className="text-center mt-8 text-gray-600">
             Don't have an account?{' '}
-            <button 
+            <button
               onClick={() => navigate('/signup')}
               className="text-primary-600 hover:text-primary-700 font-medium"
             >

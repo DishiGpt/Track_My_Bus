@@ -4,6 +4,7 @@ const BusTracker = ({ buses }) => {
     const [selectedBus, setSelectedBus] = useState(null);
     const [busLocation, setBusLocation] = useState(null);
     const [lastUpdated, setLastUpdated] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         if (!selectedBus) {
@@ -13,205 +14,194 @@ const BusTracker = ({ buses }) => {
 
         const fetchLocation = async () => {
             try {
-                if (selectedBus.currentLocation) {
-                    const baseLatitude = selectedBus.currentLocation.lat;
-                    const baseLongitude = selectedBus.currentLocation.lng;
-                    
-                    setBusLocation({
-                        lat: baseLatitude + (Math.random() - 0.5) * 0.002,
-                        lng: baseLongitude + (Math.random() - 0.5) * 0.002,
-                    });
-                    setLastUpdated(new Date());
+                const token = localStorage.getItem('token');
+                const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+                const response = await fetch(`${apiUrl}/bus/${selectedBus._id}/location`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.data && data.data.latitude && data.data.longitude) {
+                        setBusLocation({
+                            lat: data.data.latitude,
+                            lng: data.data.longitude,
+                        });
+                        setLastUpdated(new Date());
+                    }
                 } else {
-                    setBusLocation({
-                        lat: 25.5941 + (Math.random() - 0.5) * 0.01,
-                        lng: 85.1376 + (Math.random() - 0.5) * 0.01,
-                    });
-                    setLastUpdated(new Date());
+                    if (selectedBus.currentLocation) {
+                        setBusLocation({
+                            lat: selectedBus.currentLocation.latitude || selectedBus.currentLocation.lat,
+                            lng: selectedBus.currentLocation.longitude || selectedBus.currentLocation.lng,
+                        });
+                        setLastUpdated(new Date());
+                    }
                 }
             } catch (error) {
                 console.error('Error fetching bus location:', error);
+                if (selectedBus.currentLocation) {
+                    setBusLocation({
+                        lat: selectedBus.currentLocation.latitude || selectedBus.currentLocation.lat,
+                        lng: selectedBus.currentLocation.longitude || selectedBus.currentLocation.lng,
+                    });
+                }
             }
         };
 
-        fetchLocation();
+        setIsLoading(true);
+        fetchLocation().finally(() => setIsLoading(false));
+
         const interval = setInterval(fetchLocation, 10000);
         return () => clearInterval(interval);
     }, [selectedBus]);
 
     const getMapUrl = (lat, lng) => {
-        return `https://www.openstreetmap.org/export/embed.html?bbox=${lng-0.01},${lat-0.01},${lng+0.01},${lat+0.01}&layer=mapnik&marker=${lat},${lng}`;
+        return `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.01},${lat - 0.01},${lng + 0.01},${lat + 0.01}&layer=mapnik&marker=${lat},${lng}`;
     };
 
-    const getMapLink = (lat, lng) => {
-        return `https://www.google.com/maps?q=${lat},${lng}&z=15`;
+    const openInMaps = (lat, lng) => {
+        window.open(`https://www.google.com/maps?q=${lat},${lng}&z=15`, '_blank');
     };
 
     if (buses.length === 0) {
         return (
-            <div className="text-center py-8">
-                <p className="text-gray-600 text-lg">No buses to track</p>
-                <p className="text-gray-400 text-sm mt-2">Buses will appear here when available</p>
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+                <span className="text-5xl mb-4">🗺️</span>
+                <p className="text-gray-600 font-medium">No buses to track</p>
+                <p className="text-gray-400 text-sm mt-1">Buses will appear here when available</p>
             </div>
         );
     }
 
     return (
-        <div>
-            <h2 className="text-2xl font-bold mb-4">Track Your Bus</h2>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-1 space-y-3 max-h-[500px] overflow-y-auto">
-                    <p className="text-gray-600 mb-2">Select a bus to track:</p>
-                    {buses.map((bus) => (
-                        <div
-                            key={bus._id}
-                            className={`p-4 rounded-lg border cursor-pointer transition ${selectedBus?._id === bus._id
-                                ? 'bg-blue-50 border-blue-500 shadow-md'
-                                : 'bg-gray-50 hover:bg-gray-100 border-gray-200'
-                                }`}
-                            onClick={() => setSelectedBus(bus)}
-                        >
-                            <div className="flex justify-between items-start">
-                                <div>
-                                    <h3 className="font-bold text-lg">🚌 {bus.busNumber}</h3>
-                                    <p className="text-sm text-gray-600">{bus.route?.name}</p>
-                                    <p className="text-xs text-gray-500 mt-1">Driver: {bus.driver?.name}</p>
-                                </div>
-                                <div className="text-right">
-                                    {bus.currentLocation ? (
-                                        <span className="text-green-600 text-xs flex items-center gap-1">
-                                            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                                            Live
-                                        </span>
-                                    ) : (
-                                        <span className="text-gray-400 text-xs">Offline</span>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-
-                <div className="lg:col-span-2">
-                    <div className="bg-gray-100 rounded-lg overflow-hidden border" style={{ height: '500px' }}>
-                        {selectedBus ? (
-                            <>
-                                <div className="bg-blue-600 text-white p-3 flex justify-between items-center">
-                                    <div>
-                                        <span className="font-bold">Tracking: {selectedBus.busNumber}</span>
-                                        <span className="text-blue-200 text-sm ml-2">({selectedBus.route?.name})</span>
+        <div className="flex flex-col h-full">
+            {/* Bus Selector - Horizontal Scroll on Mobile */}
+            {!selectedBus && (
+                <div className="p-4">
+                    <h2 className="text-xl font-bold text-gray-900 mb-4">Select a Bus to Track</h2>
+                    <div className="space-y-3">
+                        {buses.map((bus) => (
+                            <div
+                                key={bus._id}
+                                onClick={() => setSelectedBus(bus)}
+                                className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 active:bg-gray-50 transition-all touch-manipulation cursor-pointer"
+                            >
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                                            <span className="text-2xl">🚌</span>
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-lg">{bus.busNumber}</h3>
+                                            <p className="text-sm text-gray-500">{bus.route?.name}</p>
+                                        </div>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        {lastUpdated && (
-                                            <span className="text-xs text-blue-200">
-                                                Updated: {lastUpdated.toLocaleTimeString()}
+                                        {bus.currentLocation ? (
+                                            <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-medium">
+                                                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                                                Live
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-500 px-3 py-1 rounded-full text-xs font-medium">
+                                                Offline
                                             </span>
                                         )}
-                                        {busLocation && (
-                                            <a
-                                                href={getMapLink(busLocation.lat, busLocation.lng)}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-xs bg-blue-700 px-2 py-1 rounded hover:bg-blue-800 transition"
-                                            >
-                                                Open in Maps
-                                            </a>
-                                        )}
+                                        <span className="text-gray-400">→</span>
                                     </div>
                                 </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
-                                <div style={{ height: 'calc(100% - 52px)', width: '100%' }} className="relative">
-                                    {busLocation ? (
-                                        <div className="h-full w-full relative">
-                                            <iframe
-                                                src={getMapUrl(busLocation.lat, busLocation.lng)}
-                                                style={{ width: '100%', height: '100%', border: 'none' }}
-                                                title="Bus Location Map"
-                                                loading="lazy"
-                                            />
-                                            
-                                            <div className="absolute top-4 left-4 bg-white bg-opacity-90 p-3 rounded-lg shadow-md">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-2xl">🚌</span>
-                                                    <div>
-                                                        <p className="font-bold text-sm">{selectedBus.busNumber}</p>
-                                                        <p className="text-xs text-gray-600">{selectedBus.route?.name}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
+            {/* Map View - Full Screen on Mobile */}
+            {selectedBus && (
+                <div className="flex-1 flex flex-col">
+                    {/* Map Header */}
+                    <div className="bg-blue-600 text-white p-4 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => setSelectedBus(null)}
+                                className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center active:bg-white/30 touch-manipulation"
+                            >
+                                ←
+                            </button>
+                            <div>
+                                <p className="font-bold">{selectedBus.busNumber}</p>
+                                <p className="text-xs text-blue-200">{selectedBus.route?.name}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            {busLocation && (
+                                <span className="inline-flex items-center gap-1 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+                                    <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+                                    LIVE
+                                </span>
+                            )}
+                        </div>
+                    </div>
 
-                                            <div className="absolute top-4 right-4 bg-green-500 text-white px-2 py-1 rounded-full text-xs flex items-center gap-1">
-                                                <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
-                                                LIVE
+                    {/* Map Container */}
+                    <div className="flex-1 relative bg-gray-100">
+                        {isLoading ? (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="text-center">
+                                    <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                                    <p className="text-gray-600">Getting location...</p>
+                                </div>
+                            </div>
+                        ) : busLocation ? (
+                            <>
+                                <iframe
+                                    src={getMapUrl(busLocation.lat, busLocation.lng)}
+                                    className="w-full h-full border-none"
+                                    title="Bus Location Map"
+                                    loading="lazy"
+                                />
+                                {/* Floating Info Card */}
+                                <div className="absolute bottom-4 left-4 right-4 bg-white rounded-2xl shadow-lg p-4">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-2xl">📍</span>
+                                            <div>
+                                                <p className="font-bold">{selectedBus.busNumber}</p>
+                                                <p className="text-xs text-gray-500">
+                                                    Driver: {selectedBus.driver?.name || 'N/A'}
+                                                </p>
                                             </div>
                                         </div>
-                                    ) : (
-                                        <div className="h-full flex items-center justify-center bg-gray-50">
-                                            <div className="text-center">
-                                                <div className="animate-spin text-2xl mb-2">📍</div>
-                                                <p className="text-gray-600">Getting bus location...</p>
-                                            </div>
-                                        </div>
-                                    )}
+                                        {lastUpdated && (
+                                            <p className="text-xs text-gray-400">
+                                                {lastUpdated.toLocaleTimeString()}
+                                            </p>
+                                        )}
+                                    </div>
+                                    <button
+                                        onClick={() => openInMaps(busLocation.lat, busLocation.lng)}
+                                        className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold active:bg-blue-700 transition-all touch-manipulation"
+                                    >
+                                        Open in Google Maps
+                                    </button>
                                 </div>
                             </>
                         ) : (
-                            <div className="h-full flex items-center justify-center">
-                                <div className="text-center">
-                                    <p className="text-gray-500 text-5xl mb-4">🗺️</p>
-                                    <p className="text-gray-600 text-lg">Select a bus from the list</p>
-                                    <p className="text-gray-400 text-sm mt-2">to see its live location on the map</p>
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="text-center px-8">
+                                    <span className="text-5xl mb-4 block">⚪</span>
+                                    <p className="text-gray-600 font-medium">Bus location unavailable</p>
+                                    <p className="text-gray-400 text-sm mt-1">The driver hasn't started sharing location yet</p>
                                 </div>
                             </div>
                         )}
                     </div>
-
-                    {selectedBus && (
-                        <div className="mt-4 bg-gray-50 p-4 rounded-lg border">
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <div>
-                                    <p className="text-xs text-gray-500">Bus Number</p>
-                                    <p className="font-bold">{selectedBus.busNumber}</p>
-                                </div>
-                                <div>
-                                    <p className="text-xs text-gray-500">Driver</p>
-                                    <p className="font-medium">{selectedBus.driver?.name}</p>
-                                </div>
-                                <div>
-                                    <p className="text-xs text-gray-500">Departure</p>
-                                    <p className="font-medium">{selectedBus.departureTime}</p>
-                                </div>
-                                <div>
-                                    <p className="text-xs text-gray-500">Status</p>
-                                    <p className={`font-medium ${busLocation ? 'text-green-600' : 'text-gray-500'}`}>
-                                        {busLocation ? '🟢 On Route' : '⚪ Not Started'}
-                                    </p>
-                                </div>
-                            </div>
-                            {busLocation && (
-                                <div className="mt-3 pt-3 border-t text-sm text-gray-600">
-                                    <div className="flex justify-between items-center">
-                                        <div>
-                                            <span className="font-medium">Coordinates:</span>{' '}
-                                            {busLocation.lat.toFixed(6)}, {busLocation.lng.toFixed(6)}
-                                            <span className="text-gray-400 ml-2">(updates every 10 seconds)</span>
-                                        </div>
-                                        <button
-                                            onClick={() => {
-                                                navigator.clipboard.writeText(`${busLocation.lat}, ${busLocation.lng}`);
-                                                alert('Coordinates copied to clipboard!');
-                                            }}
-                                            className="text-blue-600 hover:text-blue-800 text-xs"
-                                        >
-                                            Copy
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    )}
                 </div>
-            </div>
+            )}
         </div>
     );
 };
